@@ -12,13 +12,15 @@ title art; no commercial artwork is embedded in the executable.
 The MIT license covers only the project's original code/documentation and
 image-generated control-guide artwork, not commercial game content.
 
-The source repository's landing page retains one edited commercial image:
-`docs/img/title.png`, derived from the original title artwork with a changed
-subtitle. It is an explicit exception, not MIT-licensed artwork or evidence of
-permission from the original rights holders. Its original copyright notice is
-retained. No other extracted fonts, screenshots or commercial decorations are
-included on the landing page. Removing original pixels from generated cockpit
-extensions does not itself establish rights to redistribute those extensions.
+The source repository's landing page includes `docs/img/title.png`, derived
+from the original title artwork with a changed subtitle, and nine curated
+feature/gameplay screenshots in `docs/img/screenshots/`. The cover retains its
+original copyright notice. These images contain commercial artwork and are
+explicit retained exceptions, not MIT-licensed artwork or evidence of
+permission from the original rights holders. No extracted game fonts or
+standalone commercial decorations are included on the landing page. Removing
+original pixels from generated cockpit extensions does not itself establish
+rights to redistribute those extensions.
 
 The release packager collects copyright/license/notice files from every
 resolved dependency for the Windows target into `licenses/` and writes an

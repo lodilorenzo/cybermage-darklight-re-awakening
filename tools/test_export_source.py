@@ -23,7 +23,7 @@ def main():
             "run/SAVE000.DAT", "target/release/cybermage.exe", "site/fonts/cm-hud.woff2",
             "assets/tank-sides.png", "assets/car-sides.png", "assets/vehicle-sides/tank-left-v3.png",
             "tools/__pycache__/export_source.pyc", "crates/.private/secret.rs",
-            "tools/.env", "docs/screenshot.png", "tools/unreviewed.bin",
+            "tools/.env", "docs/screenshot.png", "docs/img/screenshots/private.png", "tools/unreviewed.bin",
         }
         for name in excluded:
             path = root / name

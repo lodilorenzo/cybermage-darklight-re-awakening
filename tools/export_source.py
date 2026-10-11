@@ -7,6 +7,8 @@ from pathlib import Path
 import shutil
 import tempfile
 
+from build_site import PAGE_FILES
+
 PROJECT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     ".gitattributes", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "THIRD_PARTY_NOTICE.md",
@@ -16,7 +18,7 @@ ROOT_FILES = (
     "assets/vehicle-sides/README.txt",
     "third_party/dasp_sample-0.11.0/LICENSE-MIT",
     "third_party/dasp_sample-0.11.0/NOTICE",
-    "docs/index.html", "docs/img/title.png", "docs/.nojekyll",
+    *(f"docs/{name}" for name in PAGE_FILES),
 )
 # Raw cockpit assets are already split: left margin then right, no original center.
 ASSET_SIZES = {
@@ -105,7 +107,7 @@ def main():
         parser.exit(1, f"Export failed: {exc}\n")
     print(f"Created {destination}")
     print("Current source, cockpit margins and static landing page included; no Git history or game installation.")
-    print("The edited landing-page cover is the sole retained commercial-art exception.")
+    print("The landing-page cover and curated screenshots retain their original commercial-content rights.")
     print("Review docs/SOURCE_EXPORT.md and redistribution rights before publishing.")
 
 

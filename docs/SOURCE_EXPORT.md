@@ -24,15 +24,16 @@ modify the original files, build binaries, or initialize Git.
 Included: Rust workspace and lockfile, Python/shell tools, Markdown docs,
 reverse-engineering notes/address tables, license/notices, original control
 guides and the generated cockpit **margins only**, plus the static GitHub Pages
-landing page (`docs/index.html`, `docs/.nojekyll`, `docs/img/title.png`). The edited
-cover is an explicit commercial-art exception requested for the landing page;
-it is not made MIT licensed by editing it. A fresh `.gitignore` excludes local
+landing page (`docs/index.html`, `docs/.nojekyll`, `docs/img/title.png` and nine
+curated PNGs in `docs/img/screenshots/`). The edited cover and feature screenshots
+are explicit commercial-art exceptions requested for the landing page; their
+commercial content is not MIT licensed. A fresh `.gitignore` excludes local
 game installations, saves, build outputs and artwork references. The included
 `.gitattributes` marks raw pixel buffers as binary so Git cannot corrupt their
 bytes through newline conversion.
 
 Excluded: ISO/game executables and resources, `run/`, saves/settings, `.git/`,
-agent state, build outputs, screenshots, the old extracted website/fonts,
+agent state, build outputs, non-allowlisted screenshots, the old extracted website/fonts,
 cockpit reference/input images, and combined cockpit previews. Files outside the
 explicit allowlist are not copied. Symlinks in selected source trees are
 rejected, and embedded runtime asset sizes are validated before copying.
@@ -69,7 +70,7 @@ pixels does not automatically remove possible derivative-work, copyright or
 trademark restrictions on generated extensions. The existing MIT license does
 not grant rights to commercial CyberMage content; retain the license and
 third-party notice and obtain any necessary permission for the added artwork
-and edited commercial cover. See [landing-page notes](LANDING_PAGE.md) for the
-one retained image and trailer configuration.
+and edited commercial cover/screenshots. See [landing-page notes](LANDING_PAGE.md)
+for the curated gallery and trailer configuration.
 Always publish this clean export, not the original working repository/history
 or a directory after importing game assets.

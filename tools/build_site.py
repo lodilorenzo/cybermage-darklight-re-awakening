@@ -1,6 +1,6 @@
 """Copy the static GitHub Pages landing page to a fresh preview directory.
 Usage: python tools/build_site.py [DESTINATION] (default: dist/landing-page)
-No game files, extracted fonts, screenshots, Pillow or fontTools are needed.
+No game installation, extracted fonts, Pillow or fontTools are needed.
 GitHub Pages serves the committed docs/ files directly; this is only for previews.
 """
 import argparse
@@ -9,7 +9,10 @@ import shutil
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE_FILES = ("index.html", "img/title.png", ".nojekyll")
+SCREENSHOT_NAMES = ("classic", "wide", "ultrawide", "options", "menu", "guide", "lab", "gate", "forest")
+PAGE_FILES = ("index.html", "img/title.png", ".nojekyll", *(
+    f"img/screenshots/{name}.png" for name in SCREENSHOT_NAMES
+))
 
 
 def build(destination):

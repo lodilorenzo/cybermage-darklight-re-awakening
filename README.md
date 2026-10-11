@@ -35,10 +35,11 @@ CyberMage content retains its original rights. See [third-party notice](THIRD_PA
 
 **GitHub source export:** `python tools/export_source.py` creates a fresh
 `dist/cybermage-source/` from the current working tree, without Git history,
-commercial game data, personal saves, extracted fonts/screenshots or cockpit references.
+commercial game installation data, personal saves, extracted fonts or cockpit references.
 Generated cockpit margins are included separately from the original center,
 preserving the existing build/rendering. The static landing page in `docs/`
-retains the edited cover as an explicit commercial-art exception.
+includes the edited cover and curated feature screenshots as explicit
+commercial-art exceptions; these images retain their original rights.
 Review [source export notes](docs/SOURCE_EXPORT.md) and artwork redistribution
 rights before publishing. [Landing-page editing notes](docs/LANDING_PAGE.md)
 explain how to add the YouTube trailers.

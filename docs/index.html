@@ -40,6 +40,11 @@ th, td { border: 1px solid #aeaaae; padding: 8px; text-align: left; }
 th { background: #28285d; color: #fff; }
 td:last-child { color: #f38210; }
 .sel { background: #f71010; color: #fff; padding: 0 4px; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 18px; }
+.gallery figure { margin: 0; }
+.gallery img { display: block; width: 100%; height: auto; border: 3px ridge #aeaaae; }
+.gallery figcaption { margin-top: 8px; font-size: 14px; color: #aeaaae; }
+.gallery figcaption strong { display: block; color: #fbf324; }
 .trailer { aspect-ratio: 16 / 9; border: 3px ridge #aeaaae; background: #111; display: grid; place-items: center; text-align: center; padding: 12px; }
 .trailer iframe { width: 100%; height: 100%; border: 0; }
 .trailer:has(iframe) { padding: 0; }
@@ -73,6 +78,7 @@ footer .button { font-size: 11px; padding: 4px 8px; }
     <a class="title" href="#credits">Credits</a>
     <a class="title" href="#top">Top</a>
     <div class="menu">
+      <a href="#screenshots">Screenshots</a>
       <a href="#trailers">Trailers</a>
       <a href="#hood">Under the hood</a>
       <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening">GitHub source</a>
@@ -113,6 +119,49 @@ footer .button { font-size: 11px; padding: 4px 8px; }
           <tr><th scope="row">Difficulty</th><td>Novice / Normal / Nasty</td></tr>
         </tbody>
       </table></div>
+    </section>
+    <section id="screenshots" aria-labelledby="screenshots-heading">
+      <h2 id="screenshots-heading">Screenshots</h2>
+      <p>See the mod in action. Select a screenshot to view it at full size.</p>
+      <div class="gallery">
+        <figure>
+          <a href="img/screenshots/classic.png"><img src="img/screenshots/classic.png" width="640" height="480" loading="lazy" decoding="async" alt="Classic 640 by 480 gameplay with the original HUD in the laboratory"></a>
+          <figcaption><strong>Classic 4:3</strong>Original proportions and HUD at 640×480.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/wide.png"><img src="img/screenshots/wide.png" width="1920" height="1080" loading="lazy" decoding="async" alt="1920 by 1080 widescreen laboratory gameplay with a proportion-correct HUD"></a>
+          <figcaption><strong>Widescreen 1080p</strong>Modern output with the original interface kept in proportion.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/ultrawide.png"><img src="img/screenshots/ultrawide.png" width="3440" height="1440" loading="lazy" decoding="async" alt="3440 by 1440 ultrawide laboratory view showing additional world visibility"></a>
+          <figcaption><strong>Ultrawide visibility</strong>3440×1440 sees more of the world without stretching the scene.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/options.png"><img src="img/screenshots/options.png" width="1280" height="720" loading="lazy" decoding="async" alt="Native Display and Input options with resolution, sensitivity, deadzone, inverted look and fullscreen settings"></a>
+          <figcaption><strong>Display and input settings</strong>Resolution, look speed, controller deadzone and fullscreen controls.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/menu.png"><img src="img/screenshots/menu.png" width="1280" height="720" loading="lazy" decoding="async" alt="Original pause menu over modern gameplay with Save, Load, Continue and Quit entries"></a>
+          <figcaption><strong>Familiar pause menus</strong>The original menu presentation remains available with modern input.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/guide.png"><img src="img/screenshots/guide.png" width="640" height="480" loading="lazy" decoding="async" alt="Illustrated in-game keyboard and mouse guide showing WASD and modern action bindings"></a>
+          <figcaption><strong>Illustrated control guides</strong>F1 opens the keyboard/mouse guide; switch guides for Xbox controls.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/lab.png"><img src="img/screenshots/lab.png" width="400" height="300" loading="lazy" decoding="async" alt="Laboratory corridor with lit ceiling panels and textured walls"></a>
+          <figcaption><strong>Sci-fi interiors</strong>Textured walls, floors and lighting in the laboratory.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/gate.png"><img src="img/screenshots/gate.png" width="400" height="300" loading="lazy" decoding="async" alt="Stone passage and barred gate in the original game world"></a>
+          <figcaption><strong>Stone environments</strong>The original game's varied locations rendered by the mod.</figcaption>
+        </figure>
+        <figure>
+          <a href="img/screenshots/forest.png"><img src="img/screenshots/forest.png" width="400" height="300" loading="lazy" decoding="async" alt="Outdoor forest scene with trees and dense foliage"></a>
+          <figcaption><strong>Outdoor scenery</strong>Trees, foliage and world props beyond the indoor levels.</figcaption>
+        </figure>
+      </div>
+      <p class="small">Screenshots contain original CyberMage artwork, which retains its original rights and is not covered by the project's MIT license.</p>
     </section>
     <section id="trailers" aria-labelledby="trailers-heading">
       <h2 id="trailers-heading">Trailers</h2>
@@ -161,13 +210,13 @@ footer .button { font-size: 11px; padding: 4px 8px; }
       <h2 id="hood-heading">Under the Hood</h2>
       <p><code>CM_HI.EXE</code> is a Watcom C++ program in LE format. Its debug information still names functions and variables, helping the native ports follow the original engine.</p>
       <p>A built-in differential tester runs old and new implementations side by side and compares the bytes they touch.</p>
-      <p class="small">This page uses system fonts and CSS borders. No game fonts, screenshot galleries or extracted interface decorations are distributed here.</p>
+      <p class="small">This page uses system fonts and CSS borders. Gameplay screenshots illustrate the mod's features; no extracted game fonts or standalone interface decorations are distributed here.</p>
     </section>
     <section id="credits" aria-labelledby="credits-heading">
       <h2 id="credits-heading">Credits</h2>
       <p><b>CyberMage: Darklight Awakening</b><br>Original game by David W. Bradley, presented by Origin and Electronic Arts.</p>
       <p class="small">Darklight Re-Awakening is an independent, unofficial fan game-mod, not affiliated with or endorsed by Origin or Electronic Arts. Original project code is MIT licensed; commercial content and trademarks retain their original rights.</p>
-      <p class="small">The edited cover above is the sole retained commercial artwork on this page. Editing its subtitle does not make it MIT licensed or remove the original rights. See the <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/THIRD_PARTY_NOTICE.md">third-party notice</a>.</p>
+      <p class="small">The edited cover and gameplay screenshots contain commercial artwork that retains its original rights and is not MIT licensed. Editing the cover's subtitle does not remove those rights. See the <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/THIRD_PARTY_NOTICE.md">third-party notice</a>.</p>
     </section>
   </main>
 </div>
