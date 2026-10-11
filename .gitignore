@@ -1,0 +1,18 @@
+/target/
+/dist/
+/iso/
+/run/
+/out/
+/gfx/
+/scratch/
+/site/
+/.pi/
+*.iso
+__pycache__/
+*.py[cod]
+.env
+.env.*
+# Local cockpit references/previews may contain commercial artwork.
+/assets/vehicle-sides/*
+!/assets/vehicle-sides/README.txt
+/assets/*-sides.png

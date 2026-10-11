@@ -1,0 +1,6 @@
+dasp_sample 0.11.0 is declared MIT OR Apache-2.0 in its crates.io package metadata.
+This distribution elects the MIT license. That crate's published archive omits
+the root license text, so the project's MIT text is included here from upstream:
+https://github.com/RustAudio/dasp/blob/d0892971a3b72dee9b3ff0d16f94b0962605e858/LICENSE-MIT
+Copyright (c) 2016 RustAudio Developers.
+No dasp source code is vendored in this directory.

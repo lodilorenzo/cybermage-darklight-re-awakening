@@ -1,0 +1,16 @@
+[package]
+name = "cybermage"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+
+[features]
+windows-gui = []
+
+[dependencies]
+cpal = "0.18.2"
+minifb = "0.29.0"
+x86 = { path = "../x86" }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

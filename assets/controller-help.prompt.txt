@@ -1,0 +1,38 @@
+Use case: infographic-diagram.
+Asset type: shipped in-game replacement controls cheat-sheet for CyberMage: Darklight Awakening.
+Input image 1 is a STYLE REFERENCE of the game's original Options artwork; image 2 is a STYLE REFERENCE of its gameplay palette, not edit targets.
+Create ONE finished landscape 4:3 image, exactly 1600x1200 pixels. A late-1990s PC game pixel-art controls screen, not a modern app mockup. Match CyberMage's dark purple/slate metallic sci-fi framing, black recessed panels, vivid green bitmap lettering, small magenta accents, bevels and ordered dithering. Crisp visible square pixel blocks, limited palette, no blurry gradients or photorealism. Typography should remain legible at 640x480: large, clear, pixel bitmap capitals, spacious rows, no tiny footnotes.
+Main subject: a recognizably accurate WHITE/GRAY XBOX 360 controller, front view in the central upper half, rendered as a detailed pixel-art sprite. Correct Xbox 360 asymmetrical stick layout: left stick high left, cross-shaped D-pad low left, right stick low right, colored ABXY diamond high right (yellow Y top, red B right, green A bottom, blue X left). Two shoulder bumpers LB/RB and separate rear triggers LT/RT, Back and Start near the central green Guide button. The Guide button is unlabeled/unassigned. Do not draw an Xbox One/Series or PlayStation controller.
+Composition: title at top, controller sprite with clean callouts and short control labels around it, a compact D-pad legend, then two clean instruction strips at the bottom. All text must be spelled exactly as supplied; no invented controls or keyboard/mouse diagrams. Labels may be arranged in clearly aligned side panels, with leader lines to the appropriate controller parts. Keep text readable, with no crossing lines through words.
+Text verbatim:
+"CYBERMAGE"
+"XBOX 360 CONTROL MATRIX"
+"LEFT STICK: MOVE / STRAFE"
+"HOLD L3: RUN"
+"RIGHT STICK: LOOK / POINTER"
+"R3: CENTER LOOK"
+"RT: FIRE / LEFT CLICK"
+"LT: HAND AIM / RIGHT CLICK"
+"LB: WEAPONS"
+"RB: POWERS"
+"A: JUMP / CONFIRM"
+"B: CROUCH / BACK"
+"X: INTERACT / USE"
+"Y: INVENTORY"
+"START: MENUS"
+"BACK: ACTIONS"
+"D-PAD UP / DOWN: FLY UP / DOWN"
+"D-PAD LEFT: VDU"
+"D-PAD RIGHT: LAND / EXIT"
+"MENUS: LEFT STICK / D-PAD NAVIGATE, A SELECT, B BACK"
+"RIGHT STICK POINTER, RT SELECT, LT SECONDARY ACTION"
+"BACK > ACTIONS: MAP, HELP, SETTINGS"
+"SAVES USE AUTOMATIC DATE + TIME"
+"B CLOSES THIS GUIDE"
+No watermark, no extra buttons, no keyboard shortcut labels, no mouse device, no external decorative characters, no misspelled or repeated lines. Deliver a complete usable bitmap guide, not a photograph of a monitor.
+
+Targeted corrective edit, using the first generated bitmap as the reference:
+Edit this finished controls guide with ONE targeted correction only. Preserve the entire image, typography, all other text, colors, Xbox 360 controller sprite, framing and layout. Two right-hand face-button callout LABELS are swapped, although the button sprite itself is correctly positioned. The panel currently reading "X: INTERACT / USE" has a leader line from the RED B BUTTON: that panel must instead read exactly "B: CROUCH / BACK". The panel immediately below, currently reading "B: CROUCH / BACK", has a leader line from the BLUE X BUTTON: that panel must instead read exactly "X: INTERACT / USE". Swap just the text in those two black panels. Do not change the leader lines. Yellow Y remains INVENTORY and green A remains JUMP / CONFIRM. Keep all other pixels and text unchanged. Maintain 4:3 aspect ratio and crisp late-90s pixel art. No other changes.
+
+Actual output checked with Pillow: 1448x1086 (4:3), RGB, no alpha channel.
+Runtime export: 1280x960, RGB, nearest-neighbour resize.

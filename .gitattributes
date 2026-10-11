@@ -1,0 +1,5 @@
+# Embedded pixel buffers must never undergo Git newline conversion.
+*.rgb binary
+*.rgba binary
+*.png binary
+*.sh text eol=lf

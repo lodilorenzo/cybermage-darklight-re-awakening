@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="CyberMage: Darklight Re-Awakening 1.0.0 — an unofficial Rust game-mod for modern Windows. Bring your own CyberMage v1.01F game files.">
+<title>CyberMage: Darklight Re-Awakening — Home Page</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #080808; color: #20e718; font: 18px/1.5 "Courier New", Courier, monospace; }
+a { color: #f38210; } a:visited { color: #bb77d0; } a:hover { color: #fbf324; }
+a:focus-visible { outline: 3px solid #fbf324; outline-offset: 3px; }
+p, ul, ol { margin: 0 0 18px; }
+b, strong, code { color: #fff; } code { overflow-wrap: anywhere; }
+h1 { font-size: 24px; color: #fbf324; margin: 16px 0 8px; }
+h2 { color: #f71010; font-size: 26px; text-shadow: 2px 2px #601010; margin: 0 0 18px; }
+h3 { color: #fbf324; font-size: 19px; }
+header, footer, .layout { width: min(100% - 24px, 940px); margin: auto; }
+header, footer { text-align: center; padding: 24px 0; }
+.cover { display: block; width: min(100%, 640px); height: auto; margin: auto; image-rendering: pixelated; border: 2px solid #585858; }
+.tag { color: #fbf324; font-size: 14px; }
+.badge { display: inline-block; background: #601010; color: #fbf324; border: 2px outset #aeaaae; padding: 0 6px; font-weight: bold; }
+.ticker { border-block: 2px solid #585858; padding: 10px 0; color: #f71010; font-weight: bold; }
+.layout { display: grid; grid-template-columns: 175px minmax(0, 1fr); gap: 16px; align-items: start; }
+.frame { border: 6px ridge #aeaaae; border-radius: 14px; background: #080808; padding: 18px; }
+nav { padding: 14px !important; }
+nav a.title { display: block; font-size: 24px; color: #f71010; text-decoration: none; padding: 4px 6px; font-weight: bold; }
+nav a.title:hover, nav a.title:focus-visible { background: #28285d; }
+.menu { font-size: 14px; text-transform: uppercase; }
+.menu a { display: block; margin: 8px 0; }
+.small { color: #aeaaae; font-size: 14px; }
+section { padding-bottom: 22px; margin-bottom: 24px; border-bottom: 6px ridge #aeaaae; scroll-margin-top: 16px; }
+section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+li { margin-bottom: 10px; }
+li::marker { color: #f71010; }
+.table-scroll { overflow-x: auto; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { border: 1px solid #aeaaae; padding: 8px; text-align: left; }
+th { background: #28285d; color: #fff; }
+td:last-child { color: #f38210; }
+.sel { background: #f71010; color: #fff; padding: 0 4px; }
+.trailer { aspect-ratio: 16 / 9; border: 3px ridge #aeaaae; background: #111; display: grid; place-items: center; text-align: center; padding: 12px; }
+.trailer iframe { width: 100%; height: 100%; border: 0; }
+.trailer:has(iframe) { padding: 0; }
+.buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.button { display: inline-block; border: 3px outset #aeaaae; background: #181818; padding: 8px 12px; text-decoration: none; font-size: 14px; }
+footer .button { font-size: 11px; padding: 4px 8px; }
+.skip { position: absolute; top: -100px; padding: 8px; background: #000; }
+.skip:focus { top: 8px; z-index: 1; }
+@media (max-width: 700px) {
+  .layout { grid-template-columns: 1fr; }
+  nav { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  nav .menu { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 16px; }
+  .frame { padding: 12px; } body { font-size: 16px; }
+}
+</style>
+</head>
+<body id="top">
+<a class="skip" href="#content">Skip to content</a>
+<header>
+  <img class="cover" src="img/title.png" width="640" height="480" alt="Edited CyberMage title art with the Darklight Re-Awakening subtitle">
+  <h1>CyberMage: Darklight Re-Awakening</h1>
+  <p class="tag">The unofficial Rust game-mod for the 1995 Origin classic<br><span class="badge">VERSION 1.0.0</span></p>
+  <p class="ticker">DOS-free host · Widescreen · Adaptive 60 FPS target<br>Keyboard + mouse and Xbox controllers · Bring your own v1.01F game files</p>
+</header>
+<div class="layout">
+  <nav class="frame" aria-label="Main navigation">
+    <a class="title" href="#new">New</a>
+    <a class="title" href="#load">Load</a>
+    <a class="title" href="#options">Options</a>
+    <a class="title" href="#training">Training</a>
+    <a class="title" href="#credits">Credits</a>
+    <a class="title" href="#top">Top</a>
+    <div class="menu">
+      <a href="#trailers">Trailers</a>
+      <a href="#hood">Under the hood</a>
+      <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening">GitHub source</a>
+      <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/README.md">Read me</a>
+      <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/docs/CONTROLS.md">Controls</a>
+      <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/REVERSE.md">RE notes</a>
+    </div>
+    <p class="small">Y2K compliant.<br>Still no DOS box.</p>
+  </nav>
+  <main id="content" class="frame">
+    <section aria-labelledby="welcome">
+      <h2 id="welcome">Welcome, Mage!</h2>
+      <p>In 1995 <b>David W. Bradley</b> and <b>Origin</b> released <b>CyberMage: Darklight Awakening</b>, a first-person shooter with a comic-book soul. It ran on DOS/4GW. Your PC no longer does.</p>
+      <p><b>Darklight Re-Awakening</b> brings it back. Original game code runs on an x86 interpreter written in Rust, with DOS, DPMI, BIOS, VESA and sound services rebuilt natively. Function by function, native Rust replacements are checked <b>bit for bit</b> against the original.</p>
+    </section>
+    <section id="new" aria-labelledby="news-heading">
+      <h2 id="news-heading">Latest News <span class="badge">NEW!</span></h2>
+      <p><b>Version 1.0.0</b> — the first public game-mod source release.</p>
+      <ul>
+        <li>Native renderer work: walls, floors, ceilings, sky, props and HUD.</li>
+        <li>Widescreen sees <i>more</i> of the world, without stretching the original UI.</li>
+        <li>WASD and mouse look, or an Xbox controller. Both can coexist.</li>
+        <li>Automatic date-and-time save names. No typing on a gamepad.</li>
+        <li>Native EA TGV movie playback and HMI music support.</li>
+      </ul>
+    </section>
+    <section id="options" aria-labelledby="options-heading">
+      <h2 id="options-heading">Options</h2>
+      <div class="table-scroll"><table>
+        <caption class="small">Modern display and input, original game settings</caption>
+        <tbody>
+          <tr><th scope="row"><span class="sel">Resolution</span></th><td>640×480 to 5120×2160, including ultrawide</td></tr>
+          <tr><th scope="row">Frame rate</th><td>Adaptive 3D resolution targeting 60 FPS</td></tr>
+          <tr><th scope="row">Fullscreen</th><td>Borderless Windows desktop window</td></tr>
+          <tr><th scope="row">Input</th><td>Keyboard/mouse + Xbox/XInput</td></tr>
+          <tr><th scope="row">Look speed</th><td>Adjustable sensitivity, deadzone and inverted look</td></tr>
+          <tr><th scope="row">Music</th><td>Windows General MIDI</td></tr>
+          <tr><th scope="row">Difficulty</th><td>Novice / Normal / Nasty</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section id="trailers" aria-labelledby="trailers-heading">
+      <h2 id="trailers-heading">Trailers</h2>
+      <p class="small">YouTube trailers will appear here after upload. No local video downloads are hosted on this page.</p>
+      <h3>Trailer 1</h3>
+      <!-- Set data-youtube-id to the 11-character YouTube video ID after uploading. -->
+      <div class="trailer" data-youtube-id="" data-title="CyberMage: Darklight Re-Awakening — trailer 1"><p>TRAILER 1<br><span class="small">YouTube upload coming soon</span></p></div>
+      <h3>Trailer 2</h3>
+      <div class="trailer" data-youtube-id="" data-title="CyberMage: Darklight Re-Awakening — trailer 2"><p>TRAILER 2<br><span class="small">YouTube upload coming soon</span></p></div>
+      <noscript><p>JavaScript is disabled; enable it to view embedded trailers once they are configured.</p></noscript>
+    </section>
+    <section id="load" aria-labelledby="load-heading">
+      <h2 id="load-heading">Load (Download)</h2>
+      <p><b>You need your own lawfully obtained CyberMage v1.01F game files.</b> No commercial game installation is included.</p>
+      <p class="buttons">
+        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.0.0">v1.0.0 source release</a>
+        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/archive/refs/tags/v1.0.0.zip">Source ZIP</a>
+      </p>
+      <ol>
+        <li>Get the source and install the Rust toolchain and your platform's build tools.</li>
+        <li>Build: <code>cargo build --locked --release</code>.</li>
+        <li>On Windows, run <code>target\release\cybermage.exe</code>.</li>
+        <li>Import your own ISO-9660 <code>.iso</code> or select <code>CYBERMAG/CM_HI.EXE</code> from your installed game.</li>
+        <li>Play! Personal saves and settings stay on your machine.</li>
+      </ol>
+      <p class="small">This is a source release, not a prebuilt Windows download. The repository also includes a clean portable-release packager for maintainers.</p>
+    </section>
+    <section id="training" aria-labelledby="training-heading">
+      <h2 id="training-heading">Training</h2>
+      <div class="table-scroll"><table>
+        <thead><tr><th scope="col">Action</th><th scope="col">Keyboard + mouse</th><th scope="col">Xbox pad</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Move / look</th><td>WASD / mouse</td><td>Left / right stick</td></tr>
+          <tr><th scope="row">Fire / hand aim</th><td>Left / right click</td><td>RT / hold LT</td></tr>
+          <tr><th scope="row">Jump / crouch</th><td>Space / Ctrl</td><td>A / B</td></tr>
+          <tr><th scope="row">Use / enter vehicle</th><td>E</td><td>X</td></tr>
+          <tr><th scope="row">Weapons / powers / items</th><td>1 / 2 / 3</td><td>LB / RB / Y</td></tr>
+          <tr><th scope="row">Map</th><td>M or Tab</td><td>Back → Automap</td></tr>
+          <tr><th scope="row">Guides / actions</th><td>F1 / F4</td><td>Back → Control Guides / Back</td></tr>
+          <tr><th scope="row">Menu</th><td>Esc</td><td>Start</td></tr>
+        </tbody>
+      </table></div>
+      <p>Everything else: <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/docs/CONTROLS.md">the full controls page</a>.</p>
+    </section>
+    <section id="hood" aria-labelledby="hood-heading">
+      <h2 id="hood-heading">Under the Hood</h2>
+      <p><code>CM_HI.EXE</code> is a Watcom C++ program in LE format. Its debug information still names functions and variables, helping the native ports follow the original engine.</p>
+      <p>A built-in differential tester runs old and new implementations side by side and compares the bytes they touch.</p>
+      <p class="small">This page uses system fonts and CSS borders. No game fonts, screenshot galleries or extracted interface decorations are distributed here.</p>
+    </section>
+    <section id="credits" aria-labelledby="credits-heading">
+      <h2 id="credits-heading">Credits</h2>
+      <p><b>CyberMage: Darklight Awakening</b><br>Original game by David W. Bradley, presented by Origin and Electronic Arts.</p>
+      <p class="small">Darklight Re-Awakening is an independent, unofficial fan game-mod, not affiliated with or endorsed by Origin or Electronic Arts. Original project code is MIT licensed; commercial content and trademarks retain their original rights.</p>
+      <p class="small">The edited cover above is the sole retained commercial artwork on this page. Editing its subtitle does not make it MIT licensed or remove the original rights. See the <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/THIRD_PARTY_NOTICE.md">third-party notice</a>.</p>
+    </section>
+  </main>
+</div>
+<footer>
+  <div class="buttons"><span class="button">POWERED BY RUST</span><span class="button">NO DOS/4GW REQUIRED</span><span class="button">BRING YOUR OWN GAME</span></div>
+  <p class="small">A little 1995 on the web. Version 1.0.0.<br>Thanks for visiting!</p>
+</footer>
+<script>
+// Only video IDs are accepted; the embed host cannot be changed by an edited URL.
+for (const panel of document.querySelectorAll("[data-youtube-id]")) {
+  const id = panel.dataset.youtubeId;
+  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) continue;
+  const frame = document.createElement("iframe");
+  frame.src = "https://www.youtube-nocookie.com/embed/" + id;
+  frame.title = panel.dataset.title;
+  frame.loading = "lazy";
+  frame.allow = "encrypted-media; picture-in-picture; fullscreen";
+  frame.allowFullscreen = true;
+  frame.referrerPolicy = "strict-origin-when-cross-origin";
+  panel.replaceChildren(frame);
+}
+</script>
+</body>
+</html>
