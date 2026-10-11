@@ -42,7 +42,7 @@ includes the edited cover and curated feature screenshots as explicit
 commercial-art exceptions; these images retain their original rights.
 Review [source export notes](docs/SOURCE_EXPORT.md) and artwork redistribution
 rights before publishing. [Landing-page editing notes](docs/LANDING_PAGE.md)
-explain how to add the YouTube trailers.
+explain how to update the YouTube trailer.
 
 ### Display and input options
 

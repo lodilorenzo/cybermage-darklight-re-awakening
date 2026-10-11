@@ -6,30 +6,19 @@ GitHub Pages serves `main` → `/docs` directly. `docs/index.html` is the editab
 static page; `.nojekyll` disables Jekyll processing. No custom workflow, package
 manager, game installation or generator is needed to update the page.
 
-## Add the YouTube trailers
+## YouTube trailer
 
-There are two labeled trailer placeholders in `docs/index.html`. After uploading
-a public or unlisted YouTube video, take its 11-character ID from the URL:
+The page embeds one trailer: https://youtu.be/Tg-I3jYtXbk. The two original
+placeholder slots have been removed. A native, titled iframe uses
+`https://www.youtube-nocookie.com/embed/Tg-I3jYtXbk`, lazy loading, fullscreen
+support and no autoplay. A direct YouTube link remains below the player.
+No custom page JavaScript or local MP4 downloads are needed.
 
-- `https://www.youtube.com/watch?v=VIDEO_ID`
-- `https://youtu.be/VIDEO_ID`
-
-Replace one empty `data-youtube-id=""` with `data-youtube-id="VIDEO_ID"`.
-Do not paste a full URL into this attribute. Change the adjacent heading and
-`data-title` if desired. Commit/push the edited HTML to `main`; Pages redeploys.
-For example (replace this illustrative ID with your actual video ID):
-
-```html
-<div class="trailer" data-youtube-id="abcdefghijk" data-title="Launch trailer">
-  <p>Launch trailer — YouTube upload coming soon</p>
-</div>
-```
-
-Valid IDs create lazy-loaded, titled `youtube-nocookie.com` embeds with no
-autoplay. Invalid or empty IDs keep the placeholder. Enable embedding on the
-YouTube video; private/age-restricted videos may not play in an embed. No MP4s
-are committed or uploaded with this source release. You can also add a normal
-YouTube link below each player for visitors who disable JavaScript.
+To change the trailer, update the iframe's video ID, its title and the direct
+YouTube link in `docs/index.html`, then update the expected ID/link in
+`tools/test_landing_page.py`. Commit/push to `main`; Pages redeploys. Enable
+embedding on the YouTube video; private/age-restricted videos may not play
+inside an iframe.
 
 ## Screenshots and artwork
 
@@ -61,9 +50,9 @@ python -m http.server 8000 --directory docs
 python tools/test_landing_page.py
 ```
 
-The check uses Python and Node.js (no npm dependencies) to test the image
-allowlist, real PNG dimensions, lazy loading/full-size links, local anchors,
-preview copying and valid/invalid YouTube embed configuration.
+The check uses only Python's standard library to test the image allowlist,
+real PNG dimensions, lazy loading/full-size links, local anchors, preview
+copying and the single configured YouTube embed/direct link.
 Optional isolated preview: `python tools/build_site.py [NEW_DIRECTORY]`.
 
 Version 1.0.0 is initially a **source release**. Download links point to the

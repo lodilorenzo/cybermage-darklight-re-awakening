@@ -79,7 +79,7 @@ footer .button { font-size: 11px; padding: 4px 8px; }
     <a class="title" href="#top">Top</a>
     <div class="menu">
       <a href="#screenshots">Screenshots</a>
-      <a href="#trailers">Trailers</a>
+      <a href="#trailers">Trailer</a>
       <a href="#hood">Under the hood</a>
       <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening">GitHub source</a>
       <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/README.md">Read me</a>
@@ -164,14 +164,11 @@ footer .button { font-size: 11px; padding: 4px 8px; }
       <p class="small">Screenshots contain original CyberMage artwork, which retains its original rights and is not covered by the project's MIT license.</p>
     </section>
     <section id="trailers" aria-labelledby="trailers-heading">
-      <h2 id="trailers-heading">Trailers</h2>
-      <p class="small">YouTube trailers will appear here after upload. No local video downloads are hosted on this page.</p>
-      <h3>Trailer 1</h3>
-      <!-- Set data-youtube-id to the 11-character YouTube video ID after uploading. -->
-      <div class="trailer" data-youtube-id="" data-title="CyberMage: Darklight Re-Awakening — trailer 1"><p>TRAILER 1<br><span class="small">YouTube upload coming soon</span></p></div>
-      <h3>Trailer 2</h3>
-      <div class="trailer" data-youtube-id="" data-title="CyberMage: Darklight Re-Awakening — trailer 2"><p>TRAILER 2<br><span class="small">YouTube upload coming soon</span></p></div>
-      <noscript><p>JavaScript is disabled; enable it to view embedded trailers once they are configured.</p></noscript>
+      <h2 id="trailers-heading">Trailer</h2>
+      <div class="trailer">
+        <iframe src="https://www.youtube-nocookie.com/embed/Tg-I3jYtXbk" title="CyberMage: Darklight Re-Awakening — official mod trailer" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <p><a href="https://youtu.be/Tg-I3jYtXbk">Watch the trailer on YouTube</a></p>
     </section>
     <section id="load" aria-labelledby="load-heading">
       <h2 id="load-heading">Load (Download)</h2>
@@ -224,20 +221,5 @@ footer .button { font-size: 11px; padding: 4px 8px; }
   <div class="buttons"><span class="button">POWERED BY RUST</span><span class="button">NO DOS/4GW REQUIRED</span><span class="button">BRING YOUR OWN GAME</span></div>
   <p class="small">A little 1995 on the web. Version 1.0.0.<br>Thanks for visiting!</p>
 </footer>
-<script>
-// Only video IDs are accepted; the embed host cannot be changed by an edited URL.
-for (const panel of document.querySelectorAll("[data-youtube-id]")) {
-  const id = panel.dataset.youtubeId;
-  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) continue;
-  const frame = document.createElement("iframe");
-  frame.src = "https://www.youtube-nocookie.com/embed/" + id;
-  frame.title = panel.dataset.title;
-  frame.loading = "lazy";
-  frame.allow = "encrypted-media; picture-in-picture; fullscreen";
-  frame.allowFullscreen = true;
-  frame.referrerPolicy = "strict-origin-when-cross-origin";
-  panel.replaceChildren(frame);
-}
-</script>
 </body>
 </html>
