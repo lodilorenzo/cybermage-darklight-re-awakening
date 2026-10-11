@@ -56,6 +56,7 @@ def main():
     assert "allowfullscreen" in trailer
     assert trailer.get("referrerpolicy") == "strict-origin-when-cross-origin"
     assert 'href="https://youtu.be/Tg-I3jYtXbk"' in html
+    assert 'href="https://lodilorenzo.dev/">lodilorenzo.dev</a>' in html
     assert "data-youtube-id" not in html and "upload coming soon" not in html
     assert "@font-face" not in html and "url(" not in html, "No extracted fonts/background art"
     assert "../dist/" not in html and "../README" not in html, "Use GitHub links, not local paths"
