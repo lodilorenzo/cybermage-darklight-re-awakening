@@ -52,11 +52,13 @@ python tools/test_landing_page.py
 
 The check uses only Python's standard library to test the image allowlist,
 real PNG dimensions, lazy loading/full-size links, local anchors, preview
-copying and the single configured YouTube embed/direct link.
+copying, Windows ZIP/checksum links and the single configured YouTube embed/direct link.
 Optional isolated preview: `python tools/build_site.py [NEW_DIRECTORY]`.
 
-Version 1.0.0 is initially a **source release**. Download links point to the
-GitHub tag/release and source ZIP, not a nonexistent prebuilt game package.
-Users must supply their own CyberMage v1.01F files when running the compiled
-mod. See `THIRD_PARTY_NOTICE.md` and the source-export notes before publishing
-any additional artwork or release files.
+Version 1.0.0 includes a **portable Windows 10/11 x64 build**. The primary
+download links directly to the release asset `cybermage-windows-x64.zip`, with
+an adjacent `.zip.sha256` checksum link. Release notes and the source ZIP remain
+available. The setup instructions cover extracting the ZIP and launching
+`cybermage.exe`; no build toolchain is required for the Windows package.
+Users must supply their own CyberMage v1.01F files. See `THIRD_PARTY_NOTICE.md`
+and the source-export notes before publishing any additional artwork or release files.

@@ -96,7 +96,7 @@ footer .button { font-size: 11px; padding: 4px 8px; }
     </section>
     <section id="new" aria-labelledby="news-heading">
       <h2 id="news-heading">Latest News <span class="badge">NEW!</span></h2>
-      <p><b>Version 1.0.0</b> — the first public game-mod source release.</p>
+      <p><b>Version 1.0.0</b> — the first public game-mod release. <a href="#load">Download the portable Windows x64 build</a> or get the source.</p>
       <ul>
         <li>Native renderer work: walls, floors, ceilings, sky, props and HUD.</li>
         <li>Widescreen sees <i>more</i> of the world, without stretching the original UI.</li>
@@ -174,17 +174,19 @@ footer .button { font-size: 11px; padding: 4px 8px; }
       <h2 id="load-heading">Load (Download)</h2>
       <p><b>You need your own lawfully obtained CyberMage v1.01F game files.</b> No commercial game installation is included.</p>
       <p class="buttons">
-        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.0.0">v1.0.0 source release</a>
+        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.0.0/cybermage-windows-x64.zip">Download Windows x64 ZIP — v1.0.0</a>
+        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.0.0">Release notes</a>
         <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/archive/refs/tags/v1.0.0.zip">Source ZIP</a>
       </p>
+      <p>For <b>Windows 10/11 x64</b>. No installer, Rust, Python or separate VC++ Redistributable is required.</p>
       <ol>
-        <li>Get the source and install the Rust toolchain and your platform's build tools.</li>
-        <li>Build: <code>cargo build --locked --release</code>.</li>
-        <li>On Windows, run <code>target\release\cybermage.exe</code>.</li>
+        <li>Download and extract the entire Windows ZIP into a writable folder (not Program Files).</li>
+        <li>Run <code>cybermage.exe</code>; first-run setup opens automatically.</li>
         <li>Import your own ISO-9660 <code>.iso</code> or select <code>CYBERMAG/CM_HI.EXE</code> from your installed game.</li>
         <li>Play! Personal saves and settings stay on your machine.</li>
       </ol>
-      <p class="small">This is a source release, not a prebuilt Windows download. The repository also includes a clean portable-release packager for maintainers.</p>
+      <p class="small"><a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.0.0/cybermage-windows-x64.zip.sha256">ZIP SHA-256 checksum</a> · Read the included README and controls guide. Redistribute only the original clean ZIP, not an installation containing imported game files or saves.</p>
+      <p class="small">Prefer building from source? Install Rust and your platform's build tools, then run <code>cargo build --locked --release</code>.</p>
     </section>
     <section id="training" aria-labelledby="training-heading">
       <h2 id="training-heading">Training</h2>
