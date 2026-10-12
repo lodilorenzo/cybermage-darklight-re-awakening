@@ -70,6 +70,7 @@ pub struct Display {
     pub recording_menu: bool,
     pub menu_log: Vec<(u32, u8)>,
     death: Option<DeathMelt>,
+    quit_frame: Option<(Vec<u32>, (usize,usize))>,
 }
 
 /// PCDeath melts a frozen screen down in random columns, revealing menu artwork.
@@ -116,7 +117,7 @@ impl Display {
             pending_world: Vec::new(), pending_hud: vec![false; 640 * 480], pending_rect: (0, 0, 0, 0), flip_stub: 0,
             guest_fb: 0, guest_angles: 0, original_options: 0, original_hud: 0,
             original_flip: 0, original_input: 0, original_menu: 0, original_title: 0, original_title_events: 0, original_navigation: [0; 5], legacy_rgb: Vec::new(),
-            original_render: 0, render_return: 0, recording_menu: false, menu_log: Vec::new(), death: None,
+            original_render: 0, render_return: 0, recording_menu: false, menu_log: Vec::new(), death: None, quit_frame: None,
         };
         if let Ok(text) = std::fs::read_to_string(path) {
             for line in text.lines() {
@@ -338,8 +339,12 @@ pub fn present_help(d: &Display, out: &mut Vec<u32>) -> (usize,usize) {
     size
 }
 
-fn quit_confirm(_m: &mut Machine, c: &mut Cpu) -> Result<(), Fault> {
-    // Return Yes; the original caller still performs normal game shutdown.
+fn quit_confirm(m: &mut Machine, c: &mut Cpu) -> Result<(), Fault> {
+    // Retain the composed image before teardown frees scene/UI data and flips
+    // a DOS-only page. The original caller still performs normal game shutdown.
+    let mut frame = Vec::new();
+    let size = render(m,c,&mut frame);
+    m.display.quit_frame = Some((frame,size));
     c.r[EAX] = 1;
     c.ret_near(0);
     Ok(())
@@ -687,6 +692,11 @@ fn tint(m: &mut Machine, c: &mut Cpu) -> Result<(), Fault> {
 
 /// Uniformly scaled 4:3 UI, with native world pixels replacing the view only.
 pub fn render(m: &mut Machine, c: &Cpu, out: &mut Vec<u32>) -> (usize, usize) {
+    if let Some((frame,size)) = &m.display.quit_frame {
+        out.clear();
+        out.extend_from_slice(frame);
+        return *size;
+    }
     prepare_menu(m, c);
     if m.display.help_open { return present_help(&m.display,out); }
     if m.display.options_open {
@@ -1518,12 +1528,22 @@ mod tests {
         std::fs::remove_dir_all(path).unwrap();
     }
     #[test]
-    fn quit_confirmation_returns_yes_without_drawing_or_exiting_early() {
+    fn quit_keeps_last_widescreen_frame_through_guest_shutdown() {
         let path = std::env::temp_dir().join(format!("cybermage-quit-{}",std::process::id()));
         let mut m = Machine::new(crate::vfs::Vfs::new(path.join("iso"),path.join("run")));
         let mut c = Cpu::new();
         c.r[x86::ESP] = 0x30000;
         c.push32(0x123456);
+        m.vga.set_mode(&mut c,0x101,true);
+        m.vga.dac[1] = [63,32,16];
+        m.display.mode = parse_mode("1920x1080").unwrap();
+        m.display.presented = true;
+        m.display.world_size = (2,2);
+        m.display.world = vec![1;4];
+        m.display.rect = (0,0,1920,1080);
+        let mut before = Vec::new();
+        assert_eq!(render(&mut m,&c,&mut before),(1920,1080));
+        assert!(before.iter().all(|&p| p != 0));
         c.wlog_on = true;
         quit_confirm(&mut m,&mut c).unwrap();
         assert_eq!(c.r[EAX],1);
@@ -1531,6 +1551,13 @@ mod tests {
         assert_eq!(c.r[x86::ESP],0x30000);
         assert!(c.wlog.is_empty());
         assert!(m.exit_code.is_none()); // leave shutdown to the original caller
+        c.push32(rt(0x057F74)); // final Aui page flip has no new native world
+        publish(&mut m,&mut c).unwrap();
+        assert!(!m.display.presented);
+        m.vga.set_mode(&mut c,3,true); // normal teardown clears video and restores text mode
+        let mut after = vec![0;1920*1080];
+        assert_eq!(render(&mut m,&c,&mut after),(1920,1080));
+        assert!(after == before,"quit introduced bars or changed the final image");
         std::fs::remove_dir_all(path).unwrap();
     }
     #[test]

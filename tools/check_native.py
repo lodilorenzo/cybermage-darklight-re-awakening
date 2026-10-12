@@ -1,5 +1,5 @@
 """Native display/controller smoke check using an isolated writable game directory.
-Run after cargo build --release: python tools/check_native.py [--menus-only | --saves-only | --viewport-only | --controls-only]
+Run after cargo build --release: python tools/check_native.py [--menus-only | --saves-only | --viewport-only | --controls-only | --quit-only]
 Requires the original game data; never writes the user's run/ saves/configuration.
 """
 from pathlib import Path
@@ -54,7 +54,14 @@ def main():
             assert count and int(count[1]) > 0, "DOS mouse routing was disabled"
             if expect_exit:
                 assert "program exited with code 0" in log, "Quit still waits for confirmation"
-                print(f"{name}: normal shutdown, no confirmation")
+                image = (root / "out/final.bmp").read_bytes()
+                w, h = struct.unpack_from("<ii", image, 18)
+                assert (w, h) == tuple(map(int, mode.split("x")))
+                stride = (w*3 + 3) & ~3
+                for x in (0, w-1):
+                    assert any(any(image[54+y*stride+x*3:54+y*stride+x*3+3]) for y in range(h)), "Quit introduced a black side bar"
+                (output / f"{name}.bmp").write_bytes(image)
+                print(f"{name}: normal shutdown, final image stays full-width")
                 return
             image = (root / "out/final.bmp").read_bytes()
             assert struct.unpack_from("<ii", image, 18) == tuple(map(int, mode.split("x")))
@@ -75,6 +82,10 @@ def main():
             z = struct.unpack_from("<i", data, 8)[0]
             print(f"{name}: {mode}, camera={xy}, z={z}, angle={angle}, pitch={pitch}")
             return xy, angle, pitch, z
+
+        if "--quit-only" in sys.argv:
+            run("quit-no-confirmation", "1280x720", "--key", "14:01", "--key", "14.6:10", expect_exit=True)
+            return
 
         if "--controls-only" in sys.argv:
             from PIL import Image

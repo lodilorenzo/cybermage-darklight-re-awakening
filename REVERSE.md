@@ -243,6 +243,14 @@ DrawTopFlat 6%, DrawWall 4%.
   mode list rather than fixed 3840-pixel limits.
   `QuitToDosYN` (0x04E390) returns Yes immediately, skipping only its popup;
   its caller at 0x04F2BF and the normal shutdown path remain intact.
+  On accepted Quit, retain the final composed RGB frame until window closure.
+  The guest teardown still runs, but its DOS-only Aui/Shutdown page flips
+  (0x057F7C) no longer replace the full-width native menu with black side bars;
+  video-mode/palette resets and freed UI/scene data cannot change the snapshot.
+  Regression: `quit_keeps_last_widescreen_frame_through_guest_shutdown` failed
+  before the fix and now passes; `python tools/check_native.py --quit-only`
+  verifies normal exit and nonblack left/right edges in the final 1280×720 image.
+  Validation: all 54 regular Rust tests, real quit smoke check and release build.
   The Xox constructor initializes `ConSize` (0x1E3CF4) from ESI=2 at 0x01025B;
   that ESI value has no other use before being overwritten. Change the immediate
   to 0: `ConWinInfo[0]` is the full 640×480 view at offset (0,0); indices 1–4
