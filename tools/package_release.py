@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+from check_icon import check_icon
 
 PROJECT = Path(__file__).resolve().parents[1]
 TARGET = "x86_64-pc-windows-msvc"
@@ -98,6 +99,7 @@ def main():
         subprocess.run(["cargo", "build", "--locked", "--release", "--target", TARGET, "--features", "windows-gui"], cwd=PROJECT, env=env, check=True)
     assert EXE.is_file(), "Build the portable target first"
     imports = imported_dlls(EXE)
+    check_icon(EXE)
     assert not any("vcruntime" in n or n.startswith("msvcp") for n in imports), f"External VC++ runtime: {imports}"
     system = {"kernel32.dll", "user32.dll", "gdi32.dll", "advapi32.dll", "ole32.dll", "oleaut32.dll",
               "winmm.dll", "avrt.dll", "comdlg32.dll", "shell32.dll", "xinput9_1_0.dll", "ntdll.dll",
@@ -132,7 +134,8 @@ def main():
     print(f"Created {archive} ({archive.stat().st_size:,} bytes)")
     print("Windows GUI executable: no console/log window on launch.")
     print(f"System DLLs only: {', '.join(imports)}")
-    print("No commercial assets, saves, personal configuration, screenshots, or installer data included.")
+    print("No commercial game files, saves, personal configuration, screenshots, or installer data included.")
+    print("The embedded Darklight logo icon retains its original commercial-artwork rights.")
 
 
 if __name__ == "__main__":

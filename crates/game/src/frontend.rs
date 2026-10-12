@@ -10,6 +10,8 @@ pub(crate) fn create_window(d: &display::Display, position: Option<(isize,isize)
     let mut window = Window::new(crate::rebrand::NAME,w,h,
         WindowOptions { resize: !d.fullscreen, title: !d.fullscreen, borderless: d.fullscreen,
             none: d.fullscreen, scale_mode: ScaleMode::AspectRatioStretch, ..WindowOptions::default() })?;
+    #[cfg(windows)]
+    set_window_icon(&window).map_err(|e| minifb::Error::WindowCreate(e.to_string()))?;
     window.set_target_fps(0);
     window.update(); // register minifb's HWND state before synchronous WM_SIZE
     if let Some((x,y)) = position { window.set_position(x,y); }
@@ -31,6 +33,30 @@ pub(crate) fn create_window(d: &display::Display, position: Option<(isize,isize)
         return Err(minifb::Error::WindowCreate("fullscreen is currently supported on Windows".into()));
     }
     Ok(window)
+}
+
+// Load the executable's embedded icon, not a file beside the installation.
+#[cfg(windows)]
+fn set_window_icon(window: &Window) -> std::io::Result<()> {
+    use std::ffi::c_void;
+    #[link(name = "kernel32")]
+    extern "system" { fn GetModuleHandleW(name: *const u16) -> *mut c_void; }
+    #[link(name = "user32")]
+    extern "system" {
+        fn LoadImageW(module: *mut c_void, name: *const u16, kind: u32, w: i32, h: i32, flags: u32) -> *mut c_void;
+        fn GetSystemMetrics(index: i32) -> i32;
+        fn SendMessageW(hwnd: *mut c_void, msg: u32, wparam: usize, lparam: isize) -> isize;
+    }
+    unsafe {
+        let module = GetModuleHandleW(std::ptr::null());
+        for (kind, metric) in [(0,49), (1,11)] { // ICON_SMALL / ICON_BIG
+            let icon = LoadImageW(module,1 as *const u16,1,
+                GetSystemMetrics(metric),GetSystemMetrics(metric+1),0x8000); // LR_SHARED
+            if icon.is_null() { return Err(std::io::Error::last_os_error()); }
+            SendMessageW(window.get_window_handle(),0x0080,kind,icon as isize); // WM_SETICON
+        }
+    }
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -507,9 +533,19 @@ mod tests {
     #[test]
     #[ignore = "requires a Windows desktop; briefly opens fullscreen and windowed windows"]
     fn fullscreen_window_fills_monitor_without_changing_render_resolution() {
+        #[link(name = "user32")]
+        extern "system" {
+            fn SendMessageW(hwnd: *mut std::ffi::c_void, msg: u32, wparam: usize, lparam: isize) -> isize;
+        }
+        let assert_icons = |window: &minifb::Window| {
+            for kind in [0,1] {
+                assert_ne!(unsafe { SendMessageW(window.get_window_handle(),0x007F,kind,0) },0);
+            }
+        };
         let mut d = crate::display::Display::new(std::path::Path::new("__window_test_no_config__"));
         d.mode = 0; d.fullscreen = true;
         let mut window = super::create_window(&d,None).unwrap();
+        assert_icons(&window);
         let r = super::monitor_rect(&window).unwrap();
         assert_eq!(window.get_size(),((r.right-r.left) as usize,(r.bottom-r.top) as usize));
         assert_eq!(window.get_position(),(r.left as isize,r.top as isize));
@@ -519,6 +555,7 @@ mod tests {
         d.fullscreen = false;
         let window = super::create_window(&d,None).unwrap();
         assert_eq!(window.get_size(),(640,480));
+        assert_icons(&window);
     }
     #[test]
     fn utility_actions_exit_each_menu_once_even_with_slow_presentation() {

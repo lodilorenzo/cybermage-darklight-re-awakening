@@ -13,6 +13,7 @@ PROJECT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     ".gitattributes", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "THIRD_PARTY_NOTICE.md",
     "CLAUDE.md", "REVERSE.md", "dead_ends.md", "labels.csv", "fields.csv",
+    "assets/cybermage.ico",
     "assets/controller-help.png", "assets/controller-help.prompt.txt",
     "assets/keyboard-help.png", "assets/keyboard-help.prompt.txt",
     "assets/vehicle-sides/README.txt",

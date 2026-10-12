@@ -12,5 +12,8 @@ cpal = "0.18.2"
 minifb = "0.29.0"
 x86 = { path = "../x86" }
 
+[build-dependencies]
+cc = "1.6.0"
+
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

@@ -11,7 +11,7 @@ def main():
     with tempfile.TemporaryDirectory() as temp:
         root = Path(temp) / "project"
         expected = set(ROOT_FILES) | set(ASSET_SIZES) | {
-            "crates/game/src/main.rs", "crates/game/Cargo.toml",
+            "crates/game/src/main.rs", "crates/game/Cargo.toml", "crates/game/build.rs",
             "tools/export_source.py", "docs/SOURCE_EXPORT.md",
         }
         for name in expected:

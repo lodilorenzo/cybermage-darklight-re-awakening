@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import zipfile
 from package_release import imported_dlls
+from check_icon import check_icon
 
 PROJECT = Path(__file__).resolve().parents[1]
 ARCHIVE = PROJECT / "dist/cybermage-windows-x64.zip"
@@ -44,6 +45,7 @@ def main():
             package = root / "cybermage-windows-x64"
             exe = package / "cybermage.exe"
             imported_dlls(exe)  # verifies x64 GUI subsystem, including --no-build archives
+            check_icon(exe)
             for line in (package / "SHA256SUMS").read_text().splitlines():
                 digest, name = line.split(" *", 1)
                 assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest

@@ -29,7 +29,9 @@ go to `run`. Portable builds use the executable's directory, not the working fol
 MIT license, dependency notices, generated guides and SHA-256 manifests. It excludes
 commercial game data, the ISO, personal saves/settings and screenshots. Packaging enables
 `windows-gui` so the executable opens no console/log window; normal Cargo builds
-retain the console for diagnostics. Player setup:
+retain the console for diagnostics. Both builds embed a multi-size Darklight emblem
+icon for Explorer, the window and taskbar; the logo artwork retains its original rights.
+Player setup:
 [release README](docs/RELEASE_README.md). Original code/guides are MIT; commercial
 CyberMage content retains its original rights. See [third-party notice](THIRD_PARTY_NOTICE.md).
 

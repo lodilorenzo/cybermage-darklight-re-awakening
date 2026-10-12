@@ -8,7 +8,10 @@ engine, is not affiliated with or endorsed by Origin Systems or Electronic
 Arts. Users must supply their own lawfully obtained CyberMage v1.01F game files. No commercial game files are
 included in the portable release, and its importer does not download any.
 The Re-Awakening title-screen wordmark is re-set at runtime from the user's own
-title art; no commercial artwork is embedded in the executable.
+title art. The executable embeds `assets/cybermage.ico`, a cropped Darklight
+emblem from the original title artwork, solely as its Windows application icon.
+This icon is an explicit commercial-art exception, retains its original rights,
+and is not MIT-licensed artwork or evidence of redistribution permission.
 The MIT license covers only the project's original code/documentation and
 image-generated control-guide artwork, not commercial game content.
 
@@ -35,4 +38,4 @@ MIDI device. It does not bundle Windows system DLLs or a MIDI sound bank.
 The static C runtime option avoids requiring a separate VC++ Redistributable.
 
 Do not redistribute an installation after importing commercial assets or
-creating saves/configuration. Redistribute only the clean, asset-free ZIP.
+creating saves/configuration. Redistribute only the clean ZIP, subject to the icon artwork's original rights.

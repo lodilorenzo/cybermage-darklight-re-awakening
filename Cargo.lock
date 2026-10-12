@@ -147,6 +147,7 @@ dependencies = [
 name = "cybermage"
 version = "1.0.0"
 dependencies = [
+ "cc",
  "cpal",
  "libc",
  "minifb",

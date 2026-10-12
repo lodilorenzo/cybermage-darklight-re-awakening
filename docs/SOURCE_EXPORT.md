@@ -22,6 +22,8 @@ modify the original files, build binaries, or initialize Git.
 ## Included and excluded
 
 Included: Rust workspace and lockfile, Python/shell tools, Markdown docs,
+the multi-size Windows icon (`assets/cybermage.ico`, an explicit commercial-logo
+exception retaining its original rights),
 reverse-engineering notes/address tables, license/notices, original control
 guides and the generated cockpit **margins only**, plus the static GitHub Pages
 landing page (`docs/index.html`, `docs/.nojekyll`, `docs/img/title.png` and nine

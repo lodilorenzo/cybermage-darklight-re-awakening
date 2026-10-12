@@ -5,6 +5,8 @@ CyberMage: Darklight Awakening v1.01F.
 Windows 10/11 x64. Keyboard/mouse or Xbox/XInput controller. No Rust, Python,
 installer, online service, or separate VC++ Redistributable is required to play.
 The packaged executable opens only the game/setup windows, with no console/log window.
+A multi-size Darklight emblem is embedded for Explorer, the window and taskbar;
+no separate icon file is needed.
 
 ## First launch
 
@@ -79,6 +81,8 @@ A/B/Start. Close the window or use Quit; quit confirmation is skipped.
 Original engine code and generated guides: MIT (`LICENSE`). Dependencies and
 copyright notices: `THIRD_PARTY_NOTICE.md`, `DEPENDENCIES.txt`, `licenses/`.
 Commercial CyberMage files and trademarks remain with their rights holders.
+The embedded icon is cropped from the original Darklight logo, retains its
+original commercial-artwork rights, and is not covered by the MIT license.
 This independent project is not affiliated with Origin or Electronic Arts.
 
 Redistribute ONLY the original clean ZIP. Do not redistribute your installation
