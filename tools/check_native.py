@@ -189,12 +189,14 @@ def main():
         resumed = run("options-return", "1280x720", "--seconds", "21", *menu_keys,
             "--key", "15:0f", "--key", "15.2:50", "--key", "15.4:4d",  # look speed
             "--key", "15.45:50", "--key", "15.5:50", "--key", "15.55:50",  # Fullscreen row
-            "--key", "15.6:1c", "--key", "15.8:01", "--key", "16.2:01", "--key", "17:01",
+            "--key", "15.6:1c", "--key", "15.65:50", "--key", "15.7:1c",  # V-Sync row
+            "--key", "15.8:01", "--key", "16.2:01", "--key", "17:01",
             "--pad", "18:20:0:1:0:0:0:0:0")
         assert resumed[0] != paused[0], "Options did not return to playable gameplay"
         native_config = (root / "run/NATIVE.CNF").read_text()
         assert "sensitivity=1.25" in native_config, "Settings were not saved"
         assert "fullscreen=true" in native_config, "Fullscreen setting was not saved"
+        assert f"vsync={str(os.name == 'nt').lower()}" in native_config, "V-Sync setting was not saved"
         run("title-options", "1280x720", "--seconds", "11", "--key", "9:18", boot=False)
         run("quit-no-confirmation", "1280x720", "--key", "14:01", "--key", "14.6:10", expect_exit=True)
         assert struct.unpack_from("<i", config.read_bytes(), 4)[0] == 0, "Saved input device was rewritten"

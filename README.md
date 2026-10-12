@@ -1,7 +1,7 @@
 # CyberMage: Darklight Re-Awakening
 
-**Game-mod version 1.0.0** · [Landing page](https://lodilorenzo.github.io/cybermage-darklight-re-awakening/)
-· [Source release](https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.0.0)
+**Game-mod version 1.1.0** · [Landing page](https://lodilorenzo.github.io/cybermage-darklight-re-awakening/)
+· [Source release](https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.1.0)
 
 *CyberMage: Darklight Re-Awakening* is a Rust reimplementation host for
 *CyberMage: Darklight Awakening* (Origin, 1995, v1.01F).  The original game data is read from the CD image; the game runs on
@@ -60,8 +60,11 @@ Input Device, DOS Joystick Calibration and Remap Keyboard Controls are removed; 
 sound, speech/music, brightness/contrast, difficulty and text-delay settings remain.
 **F4/Back → Display and Input Options** opens Display directly. Choose a rendering
 resolution (640×480 through 5120×2160, including ultrawide), mouse/right-stick sensitivity,
-radial deadzone, inverted look and **Fullscreen**. Fullscreen uses a borderless
-Windows desktop window. Changes apply when leaving Display and are saved in
+radial deadzone, inverted look, **Fullscreen** and **V-Sync**. Fullscreen uses a borderless
+Windows desktop window. V-Sync synchronizes presentation to the Windows desktop
+compositor's refresh instead of the default 60 FPS cap, in windowed or fullscreen
+mode (off by default). Movies retain their original 15 FPS playback. Resolution/fullscreen
+changes apply when leaving Display; V-Sync applies immediately. Settings are saved in
 `run/NATIVE.CNF`. **B** returns to the original Options screen when opened there,
 or to the game when opened through Actions.
 

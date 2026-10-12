@@ -294,6 +294,19 @@ DrawTopFlat 6%, DrawWall 4%.
   size reporting. Menu clicks map through both output/window letterbox layers.
   Runnable Windows desktop check: `cargo test -p cybermage
   fullscreen_window_fills_monitor_without_changing_render_resolution -- --ignored`.
+- V-Sync is a saved Display toggle (`vsync=true/false`, default off). Windows
+  minifb uses GDI: `GdiFlush` submits its drawing, then `DwmFlush` waits for
+  compositor presentation in windowed/borderless modes. This replaces, rather
+  than supplements, the frontend's 60 Hz sleep; the CPU slice retains its work
+  budget and synchronization waits are excluded from adaptive-resolution timing.
+  Movies share the wait but retain 15 FPS playback. Unavailable synchronization
+  falls back to 60 FPS; non-Windows hosts show UNAVAILABLE. Display rows use
+  28-pixel spacing for the extra toggle, shared with pointer hit testing.
+  Validation: saved on/off/navigation regression, 54 Rust tests, release build,
+  and windowed/fullscreen `cargo test -p cybermage
+  vsync_waits_for_compositor_presentation -- --ignored`. The menu smoke suite
+  hit the 240-second harness limit after producing both Options screenshots;
+  the new Display layout was visually checked, but the full suite did not finish.
 - Host pages reuse the original Options bitmap at `Xox+0xE541C`, palette 31 from
   `Xox+0xE5348` (6-bit RGB), and loaded font 3. `_font_table` (0x20732F), 32 bytes
   per font: bitmap pointer +0, height +20, signed spacing +26, glyph stride +30.

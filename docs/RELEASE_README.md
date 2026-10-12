@@ -1,4 +1,4 @@
-# CyberMage: Darklight Re-Awakening — Windows x64
+# CyberMage: Darklight Re-Awakening 1.1.0 — Windows x64
 
 CyberMage: Darklight Re-Awakening is an unofficial compatibility engine for
 CyberMage: Darklight Awakening v1.01F.
@@ -51,8 +51,11 @@ for less-used commands. See `CONTROLS.md` and the two guide PNGs.
 
 Options has Game/Display/Actions tabs: Q/E or LT/RT cycles tabs; Page Up/Down
 or LB/RB changes Actions subpages. Display offers output resolutions up to
-5120x2160, look speed, controller deadzone, inverted look and borderless
-fullscreen. The game targets 60 FPS by adapting the 3D world's internal
+5120x2160, look speed, controller deadzone, inverted look, borderless
+fullscreen and V-Sync. V-Sync synchronizes presentation to the Windows desktop
+refresh in windowed/fullscreen mode, replacing the default 60 FPS cap. It is off
+by default and saved in `run/NATIVE.CNF`; movies retain 15 FPS playback.
+The game targets 60 FPS by adapting the 3D world's internal
 resolution; HUD and menus stay at the selected output size. HUD, hands,
 menus, movies and guides keep correct proportions.
 

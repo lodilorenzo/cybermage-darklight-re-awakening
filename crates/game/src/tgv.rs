@@ -304,7 +304,8 @@ fn play(window: &mut minifb::Window, emu: &Emu, movie: &Movie) {
             for (o, &p) in rgb.iter_mut().zip(dec.frame.iter()) {
                 *o = dec.palette[p as usize];
             }
-            window.update_with_buffer(&rgb, dec.width, dec.height).ok();
+            if window.update_with_buffer(&rgb, dec.width, dec.height).is_err() { return; }
+            crate::frontend::sync_display(emu.m.display.vsync && window.is_active());
             let pad = if window.is_active() { crate::gamepad::poll(emu.m.display.deadzone) }
                 else { crate::gamepad::Pad::default() };
             let keyboard_skip = window.is_active() && [minifb::Key::Escape,minifb::Key::Enter,minifb::Key::NumPadEnter,minifb::Key::Space]

@@ -1,6 +1,6 @@
 """Check the clean ZIP, both commercial-data import paths, and modern desktop input.
 Requires your original local v1.01F assets/ISO; all gameplay writes use temporary roots.
-Run: python tools/check_release.py
+Run: python tools/check_release.py [--imports-only]
 """
 from pathlib import Path
 from datetime import datetime
@@ -10,6 +10,7 @@ import re
 import shutil
 import struct
 import subprocess
+import sys
 import tempfile
 import zipfile
 from package_release import imported_dlls
@@ -93,6 +94,8 @@ def main():
             command("iso-import", "--import-assets", PROJECT / "CMV1.01F.iso", "--root", iso_root)
             assert hashes(iso_root / "iso/CYBERMAG") == imported, "Folder and raw ISO extraction differ"
             print("Folder/ISO parity, wrong-version rejection, atomic failure and no-overwrite checks passed.")
+            if "--imports-only" in sys.argv:
+                return
 
             def kb(start, end, keys="NONE", dx=0, dy=0, buttons=0, wheel=0):
                 return ["--kb", f"{start}:{end}:{keys}:{dx}:{dy}:{buttons}:{wheel}"]

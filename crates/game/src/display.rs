@@ -12,11 +12,13 @@ pub const MODES: &[(usize, usize)] = &[
 
 pub const MENU_TABS: [&str; 3] = ["GAME", "DISPLAY", "ACTIONS"];
 pub const TAB_WIDTH: usize = 384 / MENU_TABS.len();
-pub const SETTINGS_BACK: usize = 5;
+pub const SETTINGS_BACK: usize = 6;
+pub const SETTINGS_ROW_HEIGHT: usize = 28;
 
 pub struct Display {
     pub mode: usize,
     pub fullscreen: bool,
+    pub vsync: bool,
     pub sensitivity: f32,
     pub deadzone: f32,
     pub invert_y: bool,
@@ -104,7 +106,7 @@ impl DeathMelt {
 impl Display {
     pub fn new(path: &Path) -> Self {
         let mut s = Self {
-            mode: 3, fullscreen: false, sensitivity: 1.0, deadzone: 0.18, invert_y: false,
+            mode: 3, fullscreen: false, vsync: false, sensitivity: 1.0, deadzone: 0.18, invert_y: false,
             options_open: false, help_open: false, help_keyboard: false, ui_pointer: (320,240), options_original: false, pending_game_options: false, options_in_game: false, options_return: 0,
             tab: 0, art: MenuArt::default(), row: 0,
             current_view: 0, pending: false, presented: false, recording_hud: false,
@@ -125,6 +127,7 @@ impl Display {
                     "deadzone" => { if let Ok(v) = value.parse::<f32>() { if v.is_finite() { s.deadzone = v.clamp(0.05, 0.4); } } }
                     "invert_y" => s.invert_y = value == "true",
                     "fullscreen" => s.fullscreen = value == "true",
+                    "vsync" => s.vsync = value == "true" && cfg!(windows),
                     _ => {}
                 }
             }
@@ -158,7 +161,7 @@ impl Display {
     pub fn size(&self) -> (usize, usize) { MODES[self.mode] }
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
         let (w, h) = self.size();
-        std::fs::write(path, format!("resolution={w}x{h}\nsensitivity={}\ndeadzone={}\ninvert_y={}\nfullscreen={}\n", self.sensitivity, self.deadzone, self.invert_y, self.fullscreen))
+        std::fs::write(path, format!("resolution={w}x{h}\nsensitivity={}\ndeadzone={}\ninvert_y={}\nfullscreen={}\nvsync={}\n", self.sensitivity, self.deadzone, self.invert_y, self.fullscreen, self.vsync))
     }
     pub fn change(&mut self, delta: i32) {
         match self.row {
@@ -167,6 +170,7 @@ impl Display {
             2 => self.deadzone = (self.deadzone + delta as f32 * 0.025).clamp(0.05, 0.4),
             3 => self.invert_y = !self.invert_y,
             4 => self.fullscreen = !self.fullscreen,
+            5 if cfg!(windows) => self.vsync = !self.vsync,
             _ => {}
         }
     }
@@ -889,9 +893,10 @@ pub fn menu(s: &Display, out: &mut Vec<u32>) -> (usize, usize) {
         ("STICK DEADZONE", format!("{:.3}", s.deadzone)),
         ("INVERT LOOK", if s.invert_y { "ON" } else { "OFF" }.into()),
         ("FULLSCREEN", if s.fullscreen { "ON" } else { "OFF" }.into()),
+        ("V-SYNC", if !cfg!(windows) { "UNAVAILABLE" } else if s.vsync { "ON" } else { "OFF" }.into()),
         (if s.options_original { "BACK TO GAME OPTIONS" } else { "BACK TO GAME" }, String::new())];
     for (i, (label, value)) in rows.iter().enumerate() {
-        let y = 146 + i * 32;
+        let y = 146 + i * SETTINGS_ROW_HEIGHT;
         art.fill(out, 14, y + 24, 610, 1, 0x78787C);
         art.label(out, 46, y, label, i == s.row);
         art.text(out, 364, y, value, 175);
@@ -1456,6 +1461,18 @@ mod tests {
         assert_eq!(loaded.size(),m.display.size());
         settings_key(&mut m.display,0x4B);
         assert!(!m.display.fullscreen);
+        settings_key(&mut m.display,0x50);
+        assert_eq!(m.display.row,5);
+        assert!(!m.display.vsync); // old configs/defaults retain the existing 60 FPS cap
+        settings_key(&mut m.display,0x1C);
+        assert_eq!(m.display.vsync,cfg!(windows));
+        assert!(m.display.options_open);
+        m.display.save(&file).unwrap();
+        assert_eq!(Display::new(&file).vsync,cfg!(windows));
+        settings_key(&mut m.display,0x4B);
+        assert!(!m.display.vsync);
+        m.display.save(&file).unwrap();
+        assert!(!Display::new(&file).vsync);
         settings_key(&mut m.display,0x50);
         assert_eq!(m.display.row,SETTINGS_BACK);
         settings_key(&mut m.display,0x1C);

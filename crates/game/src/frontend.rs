@@ -106,6 +106,7 @@ pub fn run(cfg: &Config) {
     let mut next_frame = Instant::now() + frame;
     let mut presentation = Duration::from_millis(2);
     let mut world_work = Duration::ZERO;
+    let mut vsync_failed = false;
     while window.is_open() {
         let start = Instant::now();
         let dt = start.duration_since(pointer_last).as_secs_f32();
@@ -232,8 +233,9 @@ pub fn run(cfg: &Config) {
                     if nav.0 != 0 { emu.m.display.change(nav.0); }
                 }
                 if let Some((x,y)) = point {
-                    if (14.0..624.0).contains(&x) && (140.0..332.0).contains(&y) {
-                        emu.m.display.row = ((y-140.0)/32.0) as usize;
+                    let bottom = 140.0 + (display::SETTINGS_BACK + 1) as f32 * display::SETTINGS_ROW_HEIGHT as f32;
+                    if (14.0..624.0).contains(&x) && (140.0..bottom).contains(&y) {
+                        emu.m.display.row = ((y-140.0)/display::SETTINGS_ROW_HEIGHT as f32) as usize;
                         if emu.m.display.row < display::SETTINGS_BACK { emu.m.display.change(1); }
                         else { close_options(&mut emu,&mut keys,pad); }
                     }
@@ -307,12 +309,33 @@ pub fn run(cfg: &Config) {
             pointer_last = Instant::now();
         }
         previous = pad; previous_physical = physical_pad;
-        wait_until(next_frame);
+        let vsync = emu.m.display.vsync && window.is_active();
+        // Keep the compositor wait out of upload timing and dynamic-resolution work.
+        let synced = sync_display(vsync);
+        if vsync && !synced && !vsync_failed { eprintln!("V-Sync unavailable; falling back to 60 FPS"); }
+        vsync_failed = vsync && !synced;
+        if !synced { wait_until(next_frame); }
         let now = Instant::now();
-        // Never run a burst of catch-up frames after a slow frame or movie.
-        next_frame = if now > next_frame + Duration::from_millis(1) { now + frame } else { next_frame + frame };
+        // V-Sync replaces the 60 Hz sleep, including on high-refresh displays.
+        // The next deadline remains a CPU work budget, not a second frame cap.
+        next_frame = if synced || now > next_frame + Duration::from_millis(1) { now + frame } else { next_frame + frame };
     }
     emu.m.desktop.release_cursor(&mut window);
+}
+
+/// minifb presents with GDI on Windows: submit its batch, then wait for DWM's
+/// next composition/present. Works for windowed and borderless fullscreen.
+pub(crate) fn sync_display(enabled: bool) -> bool {
+    if !enabled { return false; }
+    #[cfg(windows)] {
+        #[link(name = "gdi32")]
+        extern "system" { fn GdiFlush() -> i32; }
+        #[link(name = "dwmapi")]
+        extern "system" { fn DwmFlush() -> i32; }
+        unsafe { GdiFlush() != 0 && DwmFlush() >= 0 }
+    }
+    #[cfg(not(windows))]
+    { false }
 }
 
 /// Windows' default sleep quantum can miss a 16.67 ms frame deadline.
@@ -410,6 +433,30 @@ fn close_options(emu: &mut Emu, keys: &mut gamepad::Keys, pad: Pad) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn disabled_vsync_does_not_wait_for_the_display() {
+        assert!(!super::sync_display(false));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires a Windows desktop; checks compositor-synchronized presentation"]
+    fn vsync_waits_for_compositor_presentation() {
+        let mut d = crate::display::Display::new(std::path::Path::new(""));
+        d.mode = 0;
+        let pixels = vec![0x123456;640*480];
+        for fullscreen in [false,true] {
+            d.fullscreen = fullscreen;
+            let mut window = super::create_window(&d,None).unwrap();
+            let start = std::time::Instant::now();
+            for _ in 0..16 {
+                window.update_with_buffer(&pixels,640,480).unwrap();
+                assert!(super::sync_display(true));
+            }
+            assert!(start.elapsed() > std::time::Duration::from_millis(16));
+        }
+    }
+
     #[test]
     fn triggers_cycle_all_options_tabs_once_and_bumpers_only_page_actions() {
         use crate::gamepad::{Actions, Pad, LB, RB};
