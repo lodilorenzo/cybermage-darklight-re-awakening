@@ -87,7 +87,9 @@ pub fn run(cfg: &Config) {
     let mut emu = Emu::new(cfg);
     let _stream = start_audio(&mut emu);
     emu.m.audio.midi = crate::midi_out::MidiOut::open();
+    if emu.m.display.music_sc55 { apply_music_output(&mut emu); }
     if emu.m.audio.midi.is_none() { eprintln!("warning: no MIDI output device; music disabled"); }
+    let mut music_choice = emu.m.display.music_sc55;
     let mut window = create_window(&emu.m.display,None).expect("window");
     let mut buf = Vec::new();
     let mut keys = gamepad::Keys::default();
@@ -277,6 +279,11 @@ pub fn run(cfg: &Config) {
                 }
             }
         }
+        if music_choice != emu.m.display.music_sc55 {
+            apply_music_output(&mut emu);
+            music_choice = emu.m.display.music_sc55;
+            pointer_last = Instant::now();
+        }
         // The guest is paused this frame; keep its song playing in real time.
         if !ran { emu.m.audio.advance_music(f64::from(dt.min(0.1))); }
         let present_start = Instant::now();
@@ -424,7 +431,20 @@ fn select_page(emu: &mut Emu, tab: usize, actions: &mut gamepad::Actions, keys: 
     clear_input(emu,keys,pad);
 }
 
+fn apply_music_output(emu: &mut Emu) {
+    if emu.m.display.music_sc55 == emu.m.audio.is_sc55() { return; }
+    let roms = emu.m.vfs.overlay.join("sc55");
+    if let Err(e) = emu.m.audio.set_music_output(emu.m.display.music_sc55, &roms) {
+        eprintln!("Cannot change music output: {e}");
+        emu.m.display.music_sc55 = emu.m.audio.is_sc55();
+        emu.m.display.music_message = "MUSIC OUTPUT FAILED - CHECK AUDIO AND RUN/SC55 ROMS".into();
+    }
+    // Firmware boot is deliberately outside the guest/audio wall-clock timeline.
+    emu.realtime_last = None;
+}
+
 fn close_options(emu: &mut Emu, keys: &mut gamepad::Keys, pad: Pad) {
+    apply_music_output(emu);
     emu.m.display.options_open = false;
     emu.m.display.tab = 0;
     clear_input(emu,keys,pad);
@@ -626,7 +646,6 @@ fn start_audio(emu: &mut Emu) -> Option<cpal::Stream> {
     let rate = cfg.sample_rate();
     let channels = cfg.channels() as usize;
     emu.m.audio.mixer.out_rate = rate as f64;
-    emu.m.audio.output = true;
     let ring = emu.m.audio.ring.clone();
     let stream = dev.build_output_stream(cfg.config(),move |data: &mut [f32],_| {
         let frames = data.len()/channels;
@@ -638,5 +657,6 @@ fn start_audio(emu: &mut Emu) -> Option<cpal::Stream> {
         }
     },|e| eprintln!("audio error: {e}"),None).ok()?;
     stream.play().ok()?;
+    emu.m.audio.output = true;
     Some(stream)
 }

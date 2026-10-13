@@ -1,7 +1,7 @@
 # CyberMage: Darklight Re-Awakening
 
-**Game-mod version 1.1.0** · [Landing page](https://lodilorenzo.github.io/cybermage-darklight-re-awakening/)
-· [Source release](https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.1.0)
+**Game-mod version 1.2.0** · [Landing page](https://lodilorenzo.github.io/cybermage-darklight-re-awakening/)
+· [Source release](https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.2.0)
 
 *CyberMage: Darklight Re-Awakening* is a Rust reimplementation host for
 *CyberMage: Darklight Awakening* (Origin, 1995, v1.01F).  The original game data is read from the CD image; the game runs on
@@ -26,7 +26,8 @@ go to `run`. Portable builds use the executable's directory, not the working fol
 
 **Portable Windows x64 release:** `python tools/package_release.py` creates
 `dist/cybermage-windows-x64.zip` from an explicit allowlist, with a static C runtime,
-MIT license, dependency notices, generated guides and SHA-256 manifests. It excludes
+MIT/GPL license texts, corresponding source (`SOURCE.zip`), dependency notices,
+generated guides and SHA-256 manifests. It excludes
 commercial game data, the ISO, personal saves/settings and screenshots. Packaging enables
 `windows-gui` so the executable opens no console/log window; normal Cargo builds
 retain the console for diagnostics. Both builds embed a multi-size Darklight emblem
@@ -162,8 +163,26 @@ are embedded with no runtime PNG decoder. Regenerate an export with
 (or the same command with `controller-help`).
 
 Headless `--key`/`--hold` remain **diagnostic injections only**, not live game inputs.
-Music is played through the Windows General MIDI synthesizer; the original music
-volume setting uses its correct 0–127 scale.
+Music defaults to the Windows General MIDI synthesizer. **Options → Display →
+Music Output** selects **Windows MIDI** or the embedded **SC-55** (Nuked-SC55).
+The choice is saved in `run/NATIVE.CNF` as `music_output=windows|sc55`.
+For SC-55, put your lawfully obtained **complete SC-55 or SC-55mkII firmware and
+wave ROM dumps** in `run/sc55/` beneath the installation root. ROMs are detected
+by upstream SHA-256 hashes, not filenames; unknown/incomplete sets are rejected.
+If both models are present, the original SC-55 is preferred. No ROMs are supplied
+or downloaded. The Display page shows an error if switching fails and retains
+the previous output; a missing set at startup falls back to Windows MIDI.
+Firmware boot can take several seconds. Switching restarts the current song
+so instruments/controllers are restored. The original music volume setting
+uses its correct 0–127 scale; effects and music share the host audio stream in
+SC-55 mode, including music playback while host menus pause gameplay.
+
+The embedded backend makes the **combined executable GPL-2.0-or-later**
+(`COPYING`); original project code retains its MIT grant (`LICENSE`).
+Release ZIPs include corresponding source in `SOURCE.zip`. SC-55 audio needs
+user-supplied ROMs for validation; run the optional check with
+`CM_SC55_ROMS=path cargo test sc55_renders -- --ignored` (set the environment
+variable using your shell's syntax).
 
 ### Title screen
 

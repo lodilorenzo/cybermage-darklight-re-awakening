@@ -1,4 +1,4 @@
-# CyberMage: Darklight Re-Awakening 1.1.0 — Windows x64
+# CyberMage: Darklight Re-Awakening 1.2.0 — Windows x64
 
 CyberMage: Darklight Re-Awakening is an unofficial compatibility engine for
 CyberMage: Darklight Awakening v1.01F.
@@ -71,8 +71,16 @@ A/B/Start. Close the window or use Quit; quit confirmation is skipped.
 - Your saves/configuration: `run` (created on first play). Back it up before
   upgrading or replacing an installation. Nothing in `run` ships in this ZIP.
 - Native display settings: `run/NATIVE.CNF`.
-- Music uses the Windows General MIDI device. A missing MIDI output device
-  disables music but not sound effects. No MIDI sound bank is bundled.
+- Music defaults to Windows MIDI. **Options → Display → Music Output** selects
+  Windows MIDI or the embedded Nuked-SC55. For SC-55, supply a complete lawfully
+  obtained SC-55 or SC-55mkII firmware/wave ROM set in `run/sc55/` beside the
+  executable (under your chosen `--root` if overridden). Known ROMs are identified
+  by SHA-256, regardless of filenames. Original SC-55 is preferred if both models
+  are present. No ROMs are bundled or downloaded. Firmware boot can take several
+  seconds; switching restarts the song. Missing/invalid ROMs or unavailable audio
+  leave the previous output selected; startup falls back to Windows MIDI.
+  The choice is saved in `run/NATIVE.CNF`. A missing Windows MIDI device disables
+  that backend's music, not sound effects.
 - Only the fingerprinted v1.01F high-resolution executable is supported.
   A patched or different-language executable may need a separate port.
 - This is a work-in-progress compatibility engine. Automated input/import,
@@ -81,8 +89,13 @@ A/B/Start. Close the window or use Quit; quit confirmation is skipped.
 
 ## Redistribution
 
-Original engine code and generated guides: MIT (`LICENSE`). Dependencies and
-copyright notices: `THIRD_PARTY_NOTICE.md`, `DEPENDENCIES.txt`, `licenses/`.
+Combined executable: GPL-2.0-or-later (`COPYING`) because it embeds Nuked-SC55.
+Original engine code and generated guides retain their MIT grant (`LICENSE`).
+`SOURCE.zip` includes corresponding project/backend source, Cargo dependency
+source and build scripts; extract it and run `cargo build --locked --release`
+with Rust and a C++23 compiler (MSVC on Windows). Keep source/license material
+with redistributed builds. Dependencies and copyright notices:
+`THIRD_PARTY_NOTICE.md`, `DEPENDENCIES.txt`, `licenses/`.
 Commercial CyberMage files and trademarks remain with their rights holders.
 The embedded icon is cropped from the original Darklight logo, retains its
 original commercial-artwork rights, and is not covered by the MIT license.

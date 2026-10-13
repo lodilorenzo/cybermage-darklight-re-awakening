@@ -39,7 +39,7 @@ def main():
                     p = Path(name)
                     assert p.parts[0] == "cybermage-windows-x64" and ".." not in p.parts
                     assert p.parts[1] in {"cybermage.exe", "README.md", "CONTROLS.md", "LICENSE", "THIRD_PARTY_NOTICE.md",
-                                          "DEPENDENCIES.txt", "SHA256SUMS", "licenses", "guides"}, name
+                                          "DEPENDENCIES.txt", "SHA256SUMS", "licenses", "guides", "COPYING", "SOURCE.zip"}, name
                     assert not any(s.upper().startswith("SAVE") or s.lower() in {"iso", "run"} for s in p.parts), name
                     assert p.suffix.lower() not in {".iso", ".rsc", ".tgv", ".dat", ".cnf", ".usr"}, name
                 z.extractall(root)
@@ -52,7 +52,15 @@ def main():
                 assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest
             expected = ARCHIVE.with_suffix(".zip.sha256").read_text().split()[0]
             assert hashlib.sha256(ARCHIVE.read_bytes()).hexdigest() == expected
-            print("ZIP allowlist, asset exclusion and SHA-256 manifest passed.")
+            with zipfile.ZipFile(package / "SOURCE.zip") as source:
+                names = set(source.namelist())
+                assert {"COPYING", "Cargo.lock", "crates/game/build.rs", "crates/game/src/sc55_bridge.cpp",
+                        "third_party/nuked-sc55/src/backend/emu.cpp", ".cargo/config.toml"} <= names
+                assert any(n.startswith("vendor/") and n.endswith("Cargo.toml") for n in names)
+                assert not any(n.startswith(("run/", "iso/", ".git/")) or n.lower().endswith((".rom", ".bin"))
+                               for n in names if not n.startswith("vendor/"))
+                assert b'directory = "vendor"' in source.read(".cargo/config.toml")
+            print("ZIP allowlist, asset exclusion, corresponding source and SHA-256 manifest passed.")
 
             def command(name, *args, success=True, dump="1819c4:24"):
                 result = subprocess.run([str(exe), *map(str, args)], cwd=PROJECT, env={**env,"CM_DUMP":dump},

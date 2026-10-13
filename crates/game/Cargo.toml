@@ -1,8 +1,8 @@
 [package]
 name = "cybermage"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
-license = "MIT"
+license = "GPL-2.0-or-later"
 
 [features]
 windows-gui = []

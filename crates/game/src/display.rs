@@ -12,13 +12,15 @@ pub const MODES: &[(usize, usize)] = &[
 
 pub const MENU_TABS: [&str; 3] = ["GAME", "DISPLAY", "ACTIONS"];
 pub const TAB_WIDTH: usize = 384 / MENU_TABS.len();
-pub const SETTINGS_BACK: usize = 6;
+pub const SETTINGS_BACK: usize = 7;
 pub const SETTINGS_ROW_HEIGHT: usize = 28;
 
 pub struct Display {
     pub mode: usize,
     pub fullscreen: bool,
     pub vsync: bool,
+    pub music_sc55: bool,
+    pub music_message: String,
     pub sensitivity: f32,
     pub deadzone: f32,
     pub invert_y: bool,
@@ -107,7 +109,7 @@ impl DeathMelt {
 impl Display {
     pub fn new(path: &Path) -> Self {
         let mut s = Self {
-            mode: 3, fullscreen: false, vsync: false, sensitivity: 1.0, deadzone: 0.18, invert_y: false,
+            mode: 3, fullscreen: false, vsync: false, music_sc55: false, music_message: String::new(), sensitivity: 1.0, deadzone: 0.18, invert_y: false,
             options_open: false, help_open: false, help_keyboard: false, ui_pointer: (320,240), options_original: false, pending_game_options: false, options_in_game: false, options_return: 0,
             tab: 0, art: MenuArt::default(), row: 0,
             current_view: 0, pending: false, presented: false, recording_hud: false,
@@ -129,6 +131,7 @@ impl Display {
                     "invert_y" => s.invert_y = value == "true",
                     "fullscreen" => s.fullscreen = value == "true",
                     "vsync" => s.vsync = value == "true" && cfg!(windows),
+                    "music_output" => s.music_sc55 = value == "sc55",
                     _ => {}
                 }
             }
@@ -162,7 +165,7 @@ impl Display {
     pub fn size(&self) -> (usize, usize) { MODES[self.mode] }
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
         let (w, h) = self.size();
-        std::fs::write(path, format!("resolution={w}x{h}\nsensitivity={}\ndeadzone={}\ninvert_y={}\nfullscreen={}\nvsync={}\n", self.sensitivity, self.deadzone, self.invert_y, self.fullscreen, self.vsync))
+        std::fs::write(path, format!("resolution={w}x{h}\nsensitivity={}\ndeadzone={}\ninvert_y={}\nfullscreen={}\nvsync={}\nmusic_output={}\n", self.sensitivity, self.deadzone, self.invert_y, self.fullscreen, self.vsync, if self.music_sc55 { "sc55" } else { "windows" }))
     }
     pub fn change(&mut self, delta: i32) {
         match self.row {
@@ -172,6 +175,7 @@ impl Display {
             3 => self.invert_y = !self.invert_y,
             4 => self.fullscreen = !self.fullscreen,
             5 if cfg!(windows) => self.vsync = !self.vsync,
+            6 => { self.music_sc55 = !self.music_sc55; self.music_message.clear(); }
             _ => {}
         }
     }
@@ -897,13 +901,14 @@ pub fn ui_rect(w: usize, h: usize, sw: usize, sh: usize) -> (usize, usize, usize
 
 pub fn menu(s: &Display, out: &mut Vec<u32>) -> (usize, usize) {
     let art = &s.art;
-    art.page(out, 1, "DISPLAY AND INPUT", "ARROWS/DPAD CHANGE  ENTER/A OK  CLICK/X SELECT  ESC/B BACK");
+    art.page(out, 1, "DISPLAY INPUT AND MUSIC", "ARROWS/DPAD CHANGE  ENTER/A OK  CLICK/X SELECT  ESC/B BACK");
     let (w, h) = s.size();
     let rows = [("RESOLUTION", format!("{w}X{h}")), ("LOOK SPEED", format!("{:.2}", s.sensitivity)),
         ("STICK DEADZONE", format!("{:.3}", s.deadzone)),
         ("INVERT LOOK", if s.invert_y { "ON" } else { "OFF" }.into()),
         ("FULLSCREEN", if s.fullscreen { "ON" } else { "OFF" }.into()),
         ("V-SYNC", if !cfg!(windows) { "UNAVAILABLE" } else if s.vsync { "ON" } else { "OFF" }.into()),
+        ("MUSIC OUTPUT", if s.music_sc55 { "SC-55" } else { "WINDOWS MIDI" }.into()),
         (if s.options_original { "BACK TO GAME OPTIONS" } else { "BACK TO GAME" }, String::new())];
     for (i, (label, value)) in rows.iter().enumerate() {
         let y = 146 + i * SETTINGS_ROW_HEIGHT;
@@ -911,9 +916,10 @@ pub fn menu(s: &Display, out: &mut Vec<u32>) -> (usize, usize) {
         art.label(out, 46, y, label, i == s.row);
         art.text(out, 364, y, value, 175);
     }
-    for (i, line) in ["WASD MOVE  MOUSE LOOK  SPACE JUMP  E USE", "SHIFT RUN  CTRL CROUCH  ESC MENU",
-        "F1 GUIDES   F4 / BACK ACTIONS", "Q/E OR LT/RT OPTIONS PAGES"].iter().enumerate() {
-        art.text(out, 46, 350 + i * 28, line, 125);
+    let status = if s.music_message.is_empty() { "SC-55 REQUIRES YOUR ROMS IN RUN/SC55" } else { &s.music_message };
+    for (i, line) in [status, "WASD MOVE  MOUSE LOOK  SPACE JUMP  E USE",
+        "F1 GUIDES  F4/BACK ACTIONS"].iter().enumerate() {
+        art.text(out, 46, 378 + i * 28, line, 125);
     }
     (640, 480)
 }
@@ -1483,6 +1489,17 @@ mod tests {
         assert!(!m.display.vsync);
         m.display.save(&file).unwrap();
         assert!(!Display::new(&file).vsync);
+        settings_key(&mut m.display,0x50);
+        assert_eq!(m.display.row,6);
+        assert!(!m.display.music_sc55);
+        settings_key(&mut m.display,0x1C);
+        assert!(m.display.music_sc55 && m.display.options_open);
+        m.display.save(&file).unwrap();
+        assert!(Display::new(&file).music_sc55);
+        settings_key(&mut m.display,0x4B);
+        assert!(!m.display.music_sc55);
+        m.display.save(&file).unwrap();
+        assert!(!Display::new(&file).music_sc55);
         settings_key(&mut m.display,0x50);
         assert_eq!(m.display.row,SETTINGS_BACK);
         settings_key(&mut m.display,0x1C);

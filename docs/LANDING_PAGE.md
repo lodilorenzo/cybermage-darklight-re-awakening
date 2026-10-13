@@ -1,4 +1,4 @@
-# Landing page (version 1.1.0)
+# Landing page (version 1.2.0)
 
 Live URL: https://lodilorenzo.github.io/cybermage-darklight-re-awakening/
 
@@ -55,8 +55,9 @@ real PNG dimensions, lazy loading/full-size links, local anchors, preview
 copying, Windows ZIP/checksum links and the single configured YouTube embed/direct link.
 Optional isolated preview: `python tools/build_site.py [NEW_DIRECTORY]`.
 
-Version 1.1.0 adds a saved **V-Sync** Display option and includes a
-**portable Windows 10/11 x64 build**. The primary
+Version 1.2.0 adds an embedded **SC-55** music output with user-supplied
+firmware/wave ROMs (none are bundled) and includes a
+**portable Windows 10/11 x64 build** with GPL corresponding source. The primary
 download links directly to the release asset `cybermage-windows-x64.zip`, with
 an adjacent `.zip.sha256` checksum link. Release notes and the source ZIP remain
 available. The setup instructions cover extracting the ZIP and launching

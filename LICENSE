@@ -25,3 +25,10 @@ and generated control-guide artwork. Third-party dependencies retain their
 own licenses. This license does not cover the commercial CyberMage game,
 its executable, data, music, movies, screenshots, names, logos, or trademarks.
 No commercial game files are authorized for redistribution by this license.
+
+Combined executable: the embedded Nuked-SC55 backend is GPL-2.0-or-later.
+Distribution of the combined executable is governed by GPL-2.0-or-later
+(see COPYING); provide its corresponding source, including the backend and
+build scripts. This does not remove the MIT grant for the project's original
+code described above. Roland firmware and wave ROMs are not included and
+are not licensed by either this MIT grant or the GPL.

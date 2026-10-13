@@ -11,7 +11,7 @@ from build_site import PAGE_FILES
 
 PROJECT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
-    ".gitattributes", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "THIRD_PARTY_NOTICE.md",
+    ".gitattributes", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "COPYING", "THIRD_PARTY_NOTICE.md",
     "CLAUDE.md", "REVERSE.md", "dead_ends.md", "labels.csv", "fields.csv",
     "assets/cybermage.ico",
     "assets/controller-help.png", "assets/controller-help.prompt.txt",
@@ -19,6 +19,7 @@ ROOT_FILES = (
     "assets/vehicle-sides/README.txt",
     "third_party/dasp_sample-0.11.0/LICENSE-MIT",
     "third_party/dasp_sample-0.11.0/NOTICE",
+    "third_party/nuked-sc55/LICENSE", "third_party/nuked-sc55/NOTICE", "third_party/nuked-sc55/README.md",
     *(f"docs/{name}" for name in PAGE_FILES),
 )
 # Raw cockpit assets are already split: left margin then right, no original center.
@@ -28,7 +29,8 @@ ASSET_SIZES = {
     "assets/tank-sides.rgba": 2 * 534 * 480 * 4,
     "assets/car-sides.rgba": 2 * 534 * 480 * 4,
 }
-TREE_SUFFIXES = {"crates": {".rs", ".toml"}, "tools": {".py", ".sh"}, "docs": {".md"}}
+TREE_SUFFIXES = {"crates": {".rs", ".toml", ".cpp"}, "tools": {".py", ".sh"}, "docs": {".md"},
+                 "third_party/nuked-sc55/src/backend": {".cpp", ".c", ".h", ".in"}}
 GITIGNORE = """/target/
 /dist/
 /iso/
@@ -50,7 +52,7 @@ __pycache__/
 """
 
 
-def export(root, destination):
+def export(root, destination, *, include_site=True):
     root = Path(root).resolve()
     destination = Path(destination).absolute()
     if destination.exists() or destination.is_symlink():
@@ -61,6 +63,8 @@ def export(root, destination):
         raise ValueError("Export outside the project or under dist/, never into source directories")
 
     files = set(ROOT_FILES) | set(ASSET_SIZES)
+    if not include_site:
+        files.difference_update(f"docs/{name}" for name in PAGE_FILES)
     # ponytail: explicit trees/extensions, not a secret scanner; review source before publishing.
     for tree, suffixes in TREE_SUFFIXES.items():
         base = root / tree

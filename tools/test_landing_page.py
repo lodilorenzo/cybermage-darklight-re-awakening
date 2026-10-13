@@ -60,7 +60,7 @@ def main():
     assert "data-youtube-id" not in html and "upload coming soon" not in html
     assert "@font-face" not in html and "url(" not in html, "No extracted fonts/background art"
     assert "../dist/" not in html and "../README" not in html, "Use GitHub links, not local paths"
-    release = "https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.1.0/"
+    release = "https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.2.0/"
     for name in ("cybermage-windows-x64.zip", "cybermage-windows-x64.zip.sha256"):
         assert f'href="{release}{name}"' in html, f"Missing Windows release link: {name}"
     assert "not a prebuilt Windows download" not in html, "Remove obsolete source-only instructions"

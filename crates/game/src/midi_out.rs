@@ -1,4 +1,4 @@
-//! General MIDI output through the Windows MIDI mapper (winmm).
+//! MIDI output: Windows MIDI mapper or embedded Nuked-SC55.
 
 #[cfg(windows)]
 mod sys {
@@ -11,50 +11,54 @@ mod sys {
     }
 }
 
-pub struct MidiOut {
+pub enum MidiOut {
     #[allow(dead_code)]
-    handle: isize,
+    Windows(isize),
+    Sc55(crate::sc55::Sc55),
 }
 
 impl MidiOut {
-    /// Open the default MIDI output device (MIDI mapper).
-    pub fn open() -> Option<MidiOut> {
+    /// Open the default Windows MIDI output device (MIDI mapper).
+    pub fn open() -> Option<Self> {
         #[cfg(windows)]
         unsafe {
             let mut h: isize = 0;
             if sys::midiOutOpen(&mut h, 0xFFFF_FFFF, 0, 0, 0) == 0 {
-                return Some(MidiOut { handle: h });
+                return Some(Self::Windows(h));
             }
         }
         None
     }
-
+    pub fn is_sc55(&self) -> bool { matches!(self, Self::Sc55(_)) }
     pub fn send(&mut self, msg: &[u8]) {
-        #[cfg(windows)]
-        unsafe {
-            let mut w = 0u32;
-            for (i, b) in msg.iter().take(3).enumerate() {
-                w |= (*b as u32) << (i * 8);
+        match self {
+            Self::Sc55(s) => s.send(msg),
+            Self::Windows(_handle) => {
+                #[cfg(windows)]
+                unsafe {
+                    let mut w = 0u32;
+                    for (i, b) in msg.iter().take(3).enumerate() { w |= (*b as u32) << (i * 8); }
+                    sys::midiOutShortMsg(*_handle, w);
+                }
             }
-            sys::midiOutShortMsg(self.handle, w);
         }
-        let _ = msg;
     }
-
-    pub fn reset(&mut self) {
-        #[cfg(windows)]
-        unsafe {
-            sys::midiOutReset(self.handle);
+    pub fn mix(&mut self, stereo: &mut [f32], rate: f64) -> bool {
+        match self {
+            Self::Sc55(s) => s.mix(stereo, rate),
+            Self::Windows(_) => true,
         }
     }
 }
 
 impl Drop for MidiOut {
     fn drop(&mut self) {
-        #[cfg(windows)]
-        unsafe {
-            sys::midiOutReset(self.handle);
-            sys::midiOutClose(self.handle);
+        if let Self::Windows(_handle) = self {
+            #[cfg(windows)]
+            unsafe {
+                sys::midiOutReset(*_handle);
+                sys::midiOutClose(*_handle);
+            }
         }
     }
 }

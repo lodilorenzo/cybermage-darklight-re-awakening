@@ -98,17 +98,38 @@ Watcom CRT.
 | CMsosPlaySample | 0x66C3C | this, slot, len, data; stack: chans, bits, vol(0..7FFF), loops(0/-1), pan(0..FFFF) ret 0x14 | mixer voice |
 | SampleDone | 0x66D20 | this, slot → 1 if free | |
 | SetSamplePanVol | 0x66D8C | this, slot, pan, vol | |
-| CMsosPlaySong | 0x66DEC | this, song ptr in EDX (copied to ECX inside the original) | HMI player → Windows General MIDI |
+| CMsosPlaySong | 0x66DEC | this, song ptr in EDX (copied to ECX inside the original) | HMI player → Windows General MIDI or embedded Nuked-SC55 |
 | MidiMasterVolume | 0x66E3C | this, volume (low 7 bits, 0..127) | music volume /127, not sample volume /32767 |
 - Samples: 8-bit unsigned mono 11025 Hz; `soundadrs[]` (0x1E3D60) holds loaded data,
   lengths at Xox+0xE4F48[n], file offsets at Xox+0xE4B48[n], file handle Xox+0xE352C.
+
+### Embedded SC-55 output
+- `sc55.rs` / `sc55_bridge.cpp` wrap the vendored GPL-2.0-or-later Nuked-SC55
+  0.8.0 backend (revision in `third_party/nuked-sc55/NOTICE`); compiled by `build.rs`.
+  Backend source is unmodified; no Roland ROMs are included. `run/sc55/` is
+  SHA-256 checked against upstream definitions, preferring MK1 then MK2.
+- Options → Display → Music Output selects Windows MIDI / SC-55; stored as
+  `music_output=windows|sc55` in NATIVE.CNF. Failure retains the old output and
+  shows a menu warning. Successful switches silence the old synth and restart
+  the current song to restore programs/controllers.
+- SC-55 PCM is linearly resampled to the CPAL host rate and mixed with samples;
+  MIDI sequencing and synthesis advance in <=64-frame chunks. Host pages keep
+  synthesizing music/tails without advancing sample voices. HMI SysEx is still
+  skipped; initialization uses the emulator's GM reset.
+- Missing/unknown ROM rejection and settings round-trip tested; 56 unit tests
+  pass (8 ignored). Release and static-runtime Windows GUI builds pass. Native
+  menu screenshot confirms the selector; the full menu smoke script exceeded
+  its 300-second budget after options-return. Audible ROM-backed validation
+  remains pending (ignored `sc55_renders` check).
+  Combined executable distribution is GPL-2.0-or-later; portable packager bundles
+  corresponding source including the core, bridge/build scripts and Cargo deps.
 
 ### Music volume regression (latest-save investigation)
 - The game passes 95/127 for the saved 75% music setting. The native hook used
   the digital sample denominator 32767, rounding MIDI channel volume to zero.
   `native/sound.rs` now matches the original `AND 0x7F` and seven-bit scaling;
-  Windows MIDI output and the existing HMI sequencer are retained, with no synth
-  dependency. `CM_TRACE_SONG=1` now also reports the applied master volume.
+  Windows MIDI output and the existing HMI sequencer are retained.
+  `CM_TRACE_SONG=1` now also reports the applied master volume.
 - Unit regression checks mute/default/max/masked values, stack return, and an HMI
   note plus CC7=75 at 75/127. Real title and loaded-level songs parse successfully.
   Audible output on the user's physical sound device still needs confirmation.
@@ -593,7 +614,8 @@ DrawTopFlat 6%, DrawWall 4%.
 - [ ] Renderer (image1.cpp + scale.ASM) — performance critical
 - [x] Restore HMI music volume through the existing Windows General MIDI output
 - [x] Fix open doorway small-step collision; isolated latest-save regression
-- [ ] Non-Windows HMI music output (currently no MIDI device backend)
+- [ ] Validate ROM-backed SC-55 playback, host-menu audio, switching and CPU cost (SC-55 backend builds on Windows; other platforms still need build/runtime checks)
+- [ ] Non-Windows default MIDI device backend (embedded SC-55 now available in code)
 - [ ] TGV movie player (replaces PLAYTGV.EXE)
 ### Verification
 - [x] Differential test harness (guest vs native function, write-log diff) � `CM_VERIFY`

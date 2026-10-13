@@ -98,6 +98,13 @@ impl Player {
         })
     }
 
+    /// Restart after changing synthesizers so programs/controllers are replayed.
+    pub fn restart(&mut self) {
+        let paused = self.paused;
+        *self = Self::new(self.data.clone()).expect("previously validated HMI song");
+        self.paused = paused;
+    }
+
     /// Copy a song out of guest memory.
     pub fn from_guest(cpu: &x86::Cpu, ptr: u32) -> Option<Player> {
         let len = song_len(cpu, ptr);

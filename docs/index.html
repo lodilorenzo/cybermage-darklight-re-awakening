@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="CyberMage: Darklight Re-Awakening 1.1.0 — an unofficial Rust game-mod for modern Windows. Bring your own CyberMage v1.01F game files.">
+<meta name="description" content="CyberMage: Darklight Re-Awakening 1.2.0 — an unofficial Rust game-mod for modern Windows. Bring your own CyberMage v1.01F game files.">
 <title>CyberMage: Darklight Re-Awakening — Home Page</title>
 <style>
 :root { color-scheme: dark; }
@@ -66,7 +66,7 @@ footer .button { font-size: 11px; padding: 4px 8px; }
 <header>
   <img class="cover" src="img/title.png" width="640" height="480" alt="Edited CyberMage title art with the Darklight Re-Awakening subtitle">
   <h1>CyberMage: Darklight Re-Awakening</h1>
-  <p class="tag">The unofficial Rust game-mod for the 1995 Origin classic<br><span class="badge">VERSION 1.1.0</span></p>
+  <p class="tag">The unofficial Rust game-mod for the 1995 Origin classic<br><span class="badge">VERSION 1.2.0</span></p>
   <p class="ticker">DOS-free host · Widescreen · Adaptive 60 FPS target<br>Keyboard + mouse and Xbox controllers · Bring your own v1.01F game files</p>
 </header>
 <div class="layout">
@@ -96,9 +96,11 @@ footer .button { font-size: 11px; padding: 4px 8px; }
     </section>
     <section id="new" aria-labelledby="news-heading">
       <h2 id="news-heading">Latest News <span class="badge">NEW!</span></h2>
-      <p><b>Version 1.1.0</b> — adds a saved V-Sync option for monitor-synchronized presentation. <a href="#load">Download the portable Windows x64 build</a> or get the source.</p>
+      <p><b>Version 1.2.0</b> — adds embedded SC-55 music with your own firmware/wave ROMs; no licensed ROMs are bundled. <a href="#load">Download the portable Windows x64 build</a> or get the source.</p>
       <ul>
-        <li>New V-Sync toggle in Options → Display, for windowed and fullscreen play.</li>
+        <li>Options → Display → Music Output selects Windows MIDI or embedded SC-55.</li>
+        <li>SC-55 requires your own lawfully obtained ROMs; the ZIP includes GPL corresponding source, not ROMs.</li>
+        <li>Saved V-Sync toggle for windowed and fullscreen play.</li>
         <li>Native renderer work: walls, floors, ceilings, sky, props and HUD.</li>
         <li>Widescreen sees <i>more</i> of the world, without stretching the original UI.</li>
         <li>WASD and mouse look, or an Xbox controller. Both can coexist.</li>
@@ -116,7 +118,7 @@ footer .button { font-size: 11px; padding: 4px 8px; }
           <tr><th scope="row">Fullscreen</th><td>Borderless Windows desktop window</td></tr>
           <tr><th scope="row">Input</th><td>Keyboard/mouse + Xbox/XInput</td></tr>
           <tr><th scope="row">Look speed</th><td>Adjustable sensitivity, deadzone and inverted look</td></tr>
-          <tr><th scope="row">Music</th><td>Windows General MIDI</td></tr>
+          <tr><th scope="row">Music</th><td>Windows General MIDI or embedded SC-55 (user-supplied ROMs)</td></tr>
           <tr><th scope="row">Difficulty</th><td>Novice / Normal / Nasty</td></tr>
         </tbody>
       </table></div>
@@ -175,9 +177,9 @@ footer .button { font-size: 11px; padding: 4px 8px; }
       <h2 id="load-heading">Load (Download)</h2>
       <p><b>You need your own lawfully obtained CyberMage v1.01F game files.</b> No commercial game installation is included.</p>
       <p class="buttons">
-        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.1.0/cybermage-windows-x64.zip">Download Windows x64 ZIP — v1.1.0</a>
-        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.1.0">Release notes</a>
-        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/archive/refs/tags/v1.1.0.zip">Source ZIP</a>
+        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.2.0/cybermage-windows-x64.zip">Download Windows x64 ZIP — v1.2.0</a>
+        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.2.0">Release notes</a>
+        <a class="button" href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/archive/refs/tags/v1.2.0.zip">Source ZIP</a>
       </p>
       <p>For <b>Windows 10/11 x64</b>. No installer, Rust, Python or separate VC++ Redistributable is required.</p>
       <ol>
@@ -186,7 +188,7 @@ footer .button { font-size: 11px; padding: 4px 8px; }
         <li>Import your own ISO-9660 <code>.iso</code> or select <code>CYBERMAG/CM_HI.EXE</code> from your installed game.</li>
         <li>Play! Personal saves and settings stay on your machine.</li>
       </ol>
-      <p class="small"><a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.1.0/cybermage-windows-x64.zip.sha256">ZIP SHA-256 checksum</a> · Read the included README and controls guide. Redistribute only the original clean ZIP, not an installation containing imported game files or saves.</p>
+      <p class="small"><a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/download/v1.2.0/cybermage-windows-x64.zip.sha256">ZIP SHA-256 checksum</a> · Read the included README and controls guide. Redistribute only the original clean ZIP, not an installation containing imported game files or saves.</p>
       <p class="small">Prefer building from source? Install Rust and your platform's build tools, then run <code>cargo build --locked --release</code>.</p>
     </section>
     <section id="training" aria-labelledby="training-heading">
@@ -215,14 +217,14 @@ footer .button { font-size: 11px; padding: 4px 8px; }
     <section id="credits" aria-labelledby="credits-heading">
       <h2 id="credits-heading">Credits</h2>
       <p><b>CyberMage: Darklight Awakening</b><br>Original game by David W. Bradley, presented by Origin and Electronic Arts.</p>
-      <p class="small">Darklight Re-Awakening is an independent, unofficial fan game-mod, not affiliated with or endorsed by Origin or Electronic Arts. Original project code is MIT licensed; commercial content and trademarks retain their original rights.</p>
+      <p class="small">Darklight Re-Awakening is an independent, unofficial fan game-mod, not affiliated with or endorsed by Origin or Electronic Arts. Original project code retains its MIT license; the executable with Nuked-SC55 is GPL-2.0-or-later. Commercial content and trademarks retain their original rights.</p>
       <p class="small">The edited cover and gameplay screenshots contain commercial artwork that retains its original rights and is not MIT licensed. Editing the cover's subtitle does not remove those rights. See the <a href="https://github.com/lodilorenzo/cybermage-darklight-re-awakening/blob/main/THIRD_PARTY_NOTICE.md">third-party notice</a>.</p>
     </section>
   </main>
 </div>
 <footer>
   <div class="buttons"><span class="button">POWERED BY RUST</span><span class="button">NO DOS/4GW REQUIRED</span><span class="button">BRING YOUR OWN GAME</span></div>
-  <p class="small">A little 1995 on the web. Version 1.1.0.<br>Thanks for visiting! · <a href="https://lodilorenzo.dev/">lodilorenzo.dev</a></p>
+  <p class="small">A little 1995 on the web. Version 1.2.0.<br>Thanks for visiting! · <a href="https://lodilorenzo.dev/">lodilorenzo.dev</a></p>
 </footer>
 </body>
 </html>

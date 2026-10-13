@@ -13,6 +13,7 @@ import sys
 import tempfile
 import zipfile
 from check_icon import check_icon
+from export_source import export
 
 PROJECT = Path(__file__).resolve().parents[1]
 TARGET = "x86_64-pc-windows-msvc"
@@ -85,7 +86,13 @@ def licenses(stage):
     dest.mkdir()
     shutil.copyfile(rust_docs / "COPYRIGHT-library.html", dest / "COPYRIGHT-library.html")
     shutil.copytree(rust_docs / "licenses", dest / "licenses")
-    inventory.extend(["", "Rust standard library: MIT OR Apache-2.0 (see licenses/rust-standard-library).",
+    dest = stage / "licenses/nuked-sc55-0.8.0"
+    dest.mkdir()
+    for name in ("LICENSE", "NOTICE"):
+        shutil.copyfile(PROJECT / "third_party/nuked-sc55" / name, dest / name)
+    inventory.extend(["", "Nuked-SC55 0.8.0: GPL-2.0-or-later (see licenses/nuked-sc55-0.8.0).",
+                      "Combined executable: GPL-2.0-or-later; corresponding source in SOURCE.zip.",
+                      "Rust standard library: MIT OR Apache-2.0 (see licenses/rust-standard-library).",
                       "Microsoft static C runtime: distributed under the installed MSVC toolchain redistribution terms.",
                       "Windows system DLLs/MIDI sound bank: not bundled."])
     (stage / "DEPENDENCIES.txt").write_text("\n".join(inventory)+"\n", encoding="utf-8")
@@ -113,7 +120,7 @@ def main():
         for source, target in [
             (EXE, "cybermage.exe"), (PROJECT / "docs/RELEASE_README.md", "README.md"),
             (PROJECT / "docs/CONTROLS.md", "CONTROLS.md"), (PROJECT / "LICENSE", "LICENSE"),
-            (PROJECT / "THIRD_PARTY_NOTICE.md", "THIRD_PARTY_NOTICE.md"),
+            (PROJECT / "THIRD_PARTY_NOTICE.md", "THIRD_PARTY_NOTICE.md"), (PROJECT / "COPYING", "COPYING"),
             (PROJECT / "assets/controller-help.png", "guides/controller-help.png"),
             (PROJECT / "assets/keyboard-help.png", "guides/keyboard-help.png"),
         ]:
@@ -121,6 +128,17 @@ def main():
             out.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, out)
         licenses(stage)
+        # Ship corresponding source for the GPL-linked executable, including Cargo dependencies.
+        source = export(PROJECT, Path(temp) / "source", include_site=False)
+        config = subprocess.check_output(["cargo", "vendor", "--locked", "vendor"],
+                                         cwd=source, text=True)
+        (source / ".cargo").mkdir()
+        (source / ".cargo/config.toml").write_text(config, encoding="utf-8")
+        # Cargo source mtimes may be Unix epoch; ZIP's earliest date is 1980.
+        with zipfile.ZipFile(stage / "SOURCE.zip", "w", zipfile.ZIP_DEFLATED, strict_timestamps=False) as z:
+            for p in sorted(source.rglob("*")):
+                if p.is_file():
+                    z.write(p, p.relative_to(source).as_posix())
         files = sorted(p for p in stage.rglob("*") if p.is_file())
         (stage / "SHA256SUMS").write_text("".join(
             f"{hashlib.sha256(p.read_bytes()).hexdigest()} *{p.relative_to(stage).as_posix()}\n" for p in files), encoding="ascii")

@@ -23,6 +23,7 @@ mod native;
 mod machine;
 mod rebrand;
 mod midi_out;
+mod sc55;
 mod vfs;
 mod vga;
 

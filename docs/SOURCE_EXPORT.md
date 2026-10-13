@@ -21,7 +21,8 @@ modify the original files, build binaries, or initialize Git.
 
 ## Included and excluded
 
-Included: Rust workspace and lockfile, Python/shell tools, Markdown docs,
+Included: Rust workspace and lockfile, the C++ bridge and vendored Nuked-SC55
+backend (GPL-2.0-or-later), Python/shell tools, Markdown docs,
 the multi-size Windows icon (`assets/cybermage.ico`, an explicit commercial-logo
 exception retaining its original rights),
 reverse-engineering notes/address tables, license/notices, original control
@@ -34,7 +35,7 @@ game installations, saves, build outputs and artwork references. The included
 `.gitattributes` marks raw pixel buffers as binary so Git cannot corrupt their
 bytes through newline conversion.
 
-Excluded: ISO/game executables and resources, `run/`, saves/settings, `.git/`,
+Excluded: Roland firmware/wave ROMs, ISO/game executables and resources, `run/`, saves/settings, `.git/`,
 agent state, build outputs, non-allowlisted screenshots, the old extracted website/fonts,
 cockpit reference/input images, and combined cockpit previews. Files outside the
 explicit allowlist are not copied. Symlinks in selected source trees are
@@ -59,6 +60,11 @@ No renderer change or placeholder is needed. Build as usual:
 cargo build --locked --release
 python tools/test_export_source.py
 ```
+
+Building also requires a C++23 compiler for Nuked-SC55 (MSVC on Windows).
+The combined executable is GPL-2.0-or-later (`COPYING`); original project code
+retains its MIT grant. The portable packager includes a corresponding `SOURCE.zip`
+with this export plus vendored Cargo dependencies for offline rebuilding.
 
 Users still need to import their own commercial game files. Rebuilding cockpit
 art needs private generation inputs and locally owned assets; compiling does
