@@ -1,7 +1,7 @@
 # CyberMage: Darklight Re-Awakening
 
-**Game-mod version 1.2.0** · [Landing page](https://lodilorenzo.github.io/cybermage-darklight-re-awakening/)
-· [Source release](https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.2.0)
+**Game-mod version 1.3.0** · [Landing page](https://lodilorenzo.github.io/cybermage-darklight-re-awakening/)
+· [Source release](https://github.com/lodilorenzo/cybermage-darklight-re-awakening/releases/tag/v1.3.0)
 
 *CyberMage: Darklight Re-Awakening* is a Rust reimplementation host for
 *CyberMage: Darklight Awakening* (Origin, 1995, v1.01F).  The original game data is read from the CD image; the game runs on
@@ -47,10 +47,10 @@ Review [source export notes](docs/SOURCE_EXPORT.md) and artwork redistribution
 rights before publishing. [Landing-page editing notes](docs/LANDING_PAGE.md)
 explain how to update the YouTube trailer.
 
-### Display and input options
+### Enhancements
 
 **Options** from the title or pause menu keeps the original game settings and adds
-**Game / Display / Actions** tabs in its instruction panel. **Q/E** or **LT/RT**
+**Game / Enhancements / Actions** tabs in its instruction panel. **Q/E** or **LT/RT**
 select the previous/next tab, wrapping through all three; pointer clicks select tabs.
 **Page Up/Down** or **LB/RB** switch subpages within Actions only. This also works when **Back** opens Actions
 from gameplay or the title screen: the Game tab opens the actual game Options,
@@ -59,15 +59,22 @@ or the right-stick pointer and **X** to select under it on native pages. The pag
 reuse the original Options artwork, bitmap font, colours and selection highlight.
 Input Device, DOS Joystick Calibration and Remap Keyboard Controls are removed; original
 sound, speech/music, brightness/contrast, difficulty and text-delay settings remain.
-**F4/Back → Display and Input Options** opens Display directly. Choose a rendering
+**F4/Back → Enhancements** opens the Enhancements page directly. Choose a rendering
 resolution (640×480 through 5120×2160, including ultrawide), mouse/right-stick sensitivity,
 radial deadzone, inverted look, **Fullscreen** and **V-Sync**. Fullscreen uses a borderless
 Windows desktop window. V-Sync synchronizes presentation to the Windows desktop
 compositor's refresh instead of the default 60 FPS cap, in windowed or fullscreen
 mode (off by default). Movies retain their original 15 FPS playback. Resolution/fullscreen
-changes apply when leaving Display; V-Sync applies immediately. Settings are saved in
-`run/NATIVE.CNF`. **B** returns to the original Options screen when opened there,
-or to the game when opened through Actions.
+and **Renderer** changes apply when leaving Enhancements; V-Sync applies immediately. Settings are saved in
+`run/NATIVE.CNF`. **B** returns to the original
+Options screen when opened there, or to the game when opened through Actions.
+
+**Renderer → Vulkan** enables the experimental Windows GPU presentation/scaling
+backend; **Software** keeps minifb/GDI and remains the default/fallback. CLI:
+`cybermage --renderer vulkan`. An earlier paired SC-55 benchmark measured
+~57 → ~68 FPS; Vulkan still has occasional audio underruns. World rendering
+and composition remain CPU-side in this first version.
+[Requirements, validation and performance](docs/VULKAN.md).
 
 The selected resolution is the output size, with additional horizontal
 visibility rather than a stretched 4:3 image. To target smooth **60 FPS**, the 3D
@@ -88,7 +95,7 @@ Other controllers can use Steam Input configured to output an Xbox controller.
 **Keyboard/mouse and Xbox controls coexist; no controller is required.** WASD moves/
 strafes, mouse looks, left/right clicks fire/aim the hand, Space jumps, Ctrl crouches,
 Shift runs, and E interacts/enters vehicles. 1/2/3 select weapons/powers/inventory,
-M/Tab toggles the map, Esc opens menus, F1 opens guides and F4 opens Actions.
+M/Tab toggles the map, Esc opens menus, F1 opens guides, F4 opens Actions.
 Full commands, menus and illustrations: [CONTROLS](docs/CONTROLS.md).
 Windows mouse look is relative/recentered with cursor confinement during gameplay;
 menus use a proportion-correct pointer. Losing focus releases controls, frees the
@@ -118,7 +125,7 @@ In DOS menus/selectors: left stick or D-pad navigates, **A** accepts, **B** goes
 and **X** clears selections where supported. Right stick moves the pointer,
 **RT** left-clicks and **LT** right-clicks (including secondary shop actions). **RB/LB** answer Yes/No
 in confirmation dialogs. Inside Options, triggers switch main tabs instead of
-clicking; **X** selects under the pointer on Display/Actions.
+clicking; **X** selects under the pointer on Enhancements/Actions.
 Held buttons/triggers retain their original context until release, so opening a
 menu cannot turn a held gameplay action into an accidental accept/click.
 
@@ -135,7 +142,7 @@ they are unavailable from title-screen Options.
 | Aircar guns: narrow / widen / center aim | Back → named aircar aim command |
 | Game view size, VDU monitors | Back → named display command (D-pad left also cycles VDUs) |
 | Pause without menus, help, skip NPC speech | Back → named command |
-| Display/input settings | Back → Display and Input Options |
+| Display/input settings | Back → Enhancements |
 | Save, load, restart, continue, difficulty/sound options, quit | Start → original menus; navigate with D-pad/left stick or the pointer, accept with A/RT |
 | Any weapon/power/item, including entries 13–20 | Selector → navigate or use the pointer, then A/RT |
 
@@ -163,19 +170,23 @@ are embedded with no runtime PNG decoder. Regenerate an export with
 (or the same command with `controller-help`).
 
 Headless `--key`/`--hold` remain **diagnostic injections only**, not live game inputs.
-Music defaults to the Windows General MIDI synthesizer. **Options → Display →
+Music defaults to the Windows General MIDI synthesizer. **Options → Enhancements →
 Music Output** selects **Windows MIDI** or the embedded **SC-55** (Nuked-SC55).
 The choice is saved in `run/NATIVE.CNF` as `music_output=windows|sc55`.
 For SC-55, put your lawfully obtained **complete SC-55 or SC-55mkII firmware and
 wave ROM dumps** in `run/sc55/` beneath the installation root. ROMs are detected
 by upstream SHA-256 hashes, not filenames; unknown/incomplete sets are rejected.
 If both models are present, the original SC-55 is preferred. No ROMs are supplied
-or downloaded. The Display page shows an error if switching fails and retains
+or downloaded. The Enhancements page shows an error if switching fails and retains
 the previous output; a missing set at startup falls back to Windows MIDI.
 Firmware boot can take several seconds. Switching restarts the current song
 so instruments/controllers are restored. The original music volume setting
 uses its correct 0–127 scale; effects and music share the host audio stream in
 SC-55 mode, including music playback while host menus pause gameplay.
+SC-55 synthesis runs on a dedicated worker rather than the game thread; the
+Windows/MSVC backend also uses native link-time optimization. MIDI/effect timing
+and ROM emulation are preserved. [Performance and validation results](docs/SC55_PERFORMANCE.md)
+include the remaining initial-run underrun limitation.
 
 The embedded backend makes the **combined executable GPL-2.0-or-later**
 (`COPYING`); original project code retains its MIT grant (`LICENSE`).
@@ -227,5 +238,6 @@ See `CLAUDE.md` and `REVERSE.md`.  Useful switches:
 - `CM_PROFILE=1` guest profile (`python tools/profile.py`)
 - `python tools/check_performance.py --window --repeat 3` isolated uncapped frame-work benchmark with p50/p95/p99 timings and real Windows upload; `--turn` adds camera motion, `--scene N` changes level (omit `--window` for headless capacity)
 - `CM_BENCH_SECONDS=N` benchmark after a headless scripted boot and two-second warmup; `CM_BENCH_WINDOW=1` includes window upload
+- `python tools/check_performance.py --window --fullscreen --modes 2560x1080 --renderer-pair --repeat 3`: alternating software/Vulkan comparison with fixed world quality; add `--vsync` for presentation pacing and `--audio --music-output windows` or `--music-output sc55` for real-device audio. [Vulkan performance findings](docs/VULKAN.md).
 - `CM_NATIVE_PIXELS=11059200` disable adaptive resolution reduction for native-quality diagnostic comparisons
 - `--tgv-dump FILE N` decode movie frames to `out\`

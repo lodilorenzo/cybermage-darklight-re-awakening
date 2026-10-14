@@ -1,4 +1,4 @@
-# CyberMage: Darklight Re-Awakening 1.2.0 — Windows x64
+# CyberMage: Darklight Re-Awakening 1.3.0 — Windows x64
 
 CyberMage: Darklight Re-Awakening is an unofficial compatibility engine for
 CyberMage: Darklight Awakening v1.01F.
@@ -49,8 +49,8 @@ F1 opens the illustrated keyboard/mouse guide. Left/Right or LB/RB switches
 between keyboard/mouse and Xbox 360 guides; Esc/B closes. F4/Back opens Actions
 for less-used commands. See `CONTROLS.md` and the two guide PNGs.
 
-Options has Game/Display/Actions tabs: Q/E or LT/RT cycles tabs; Page Up/Down
-or LB/RB changes Actions subpages. Display offers output resolutions up to
+Options has Game/Enhancements/Actions tabs: Q/E or LT/RT cycles tabs; Page Up/Down
+or LB/RB changes Actions subpages. Enhancements offers output resolutions up to
 5120x2160, look speed, controller deadzone, inverted look, borderless
 fullscreen and V-Sync. V-Sync synchronizes presentation to the Windows desktop
 refresh in windowed/fullscreen mode, replacing the default 60 FPS cap. It is off
@@ -58,6 +58,11 @@ by default and saved in `run/NATIVE.CNF`; movies retain 15 FPS playback.
 The game targets 60 FPS by adapting the 3D world's internal
 resolution; HUD and menus stay at the selected output size. HUD, hands,
 menus, movies and guides keep correct proportions.
+
+**Enhancements → Renderer → Vulkan** enables experimental Windows GPU
+presentation/scaling. Software remains the default and fallback; world rendering
+is still CPU-side. Renderer/resolution/fullscreen changes apply when leaving
+Enhancements. Vulkan needs a compatible driver and may still cause audio underruns.
 
 Controller support is automatic/hotplug; no controller is required. Focus loss
 releases inputs, frees the mouse and pauses the simulation. Disconnection leaves
@@ -71,7 +76,7 @@ A/B/Start. Close the window or use Quit; quit confirmation is skipped.
 - Your saves/configuration: `run` (created on first play). Back it up before
   upgrading or replacing an installation. Nothing in `run` ships in this ZIP.
 - Native display settings: `run/NATIVE.CNF`.
-- Music defaults to Windows MIDI. **Options → Display → Music Output** selects
+- Music defaults to Windows MIDI. **Options → Enhancements → Music Output** selects
   Windows MIDI or the embedded Nuked-SC55. For SC-55, supply a complete lawfully
   obtained SC-55 or SC-55mkII firmware/wave ROM set in `run/sc55/` beside the
   executable (under your chosen `--root` if overridden). Known ROMs are identified
@@ -80,7 +85,8 @@ A/B/Start. Close the window or use Quit; quit confirmation is skipped.
   seconds; switching restarts the song. Missing/invalid ROMs or unavailable audio
   leave the previous output selected; startup falls back to Windows MIDI.
   The choice is saved in `run/NATIVE.CNF`. A missing Windows MIDI device disables
-  that backend's music, not sound effects.
+  that backend's music, not sound effects. SC-55 synthesis now runs on a dedicated
+  worker; initial-run audio underruns remain a known limitation.
 - Only the fingerprinted v1.01F high-resolution executable is supported.
   A patched or different-language executable may need a separate port.
 - This is a work-in-progress compatibility engine. Automated input/import,

@@ -76,6 +76,7 @@ pub struct Audio {
     /// Music synthesizer (None when headless / unavailable)
     pub midi: Option<crate::midi_out::MidiOut>,
     pub ring: Arc<Mutex<VecDeque<f32>>>,
+    pub underruns: Arc<std::sync::atomic::AtomicU64>,
     pub enabled: bool,
     /// True when an output device consumes the ring buffer.
     pub output: bool,
@@ -90,6 +91,7 @@ impl Audio {
             mixer,
             midi: None,
             ring: Arc::new(Mutex::new(VecDeque::new())),
+            underruns: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             enabled: true,
             output: false,
             frac: 0.0,
@@ -120,7 +122,7 @@ impl Audio {
     pub fn set_music_output(&mut self, sc55: bool, roms: &std::path::Path) -> Result<(), String> {
         let output = if sc55 {
             if !self.output { return Err("SC-55 requires an audio output device".into()); }
-            crate::midi_out::MidiOut::Sc55(crate::sc55::Sc55::open(roms)?)
+            crate::midi_out::MidiOut::Sc55Worker(crate::sc55_worker::Worker::open(roms,self.ring.clone())?)
         } else {
             crate::midi_out::MidiOut::open().ok_or("No Windows MIDI output device")?
         };
@@ -132,7 +134,18 @@ impl Audio {
         self.midi = Some(output);
         self.frac = 0.0;
         self.ring.lock().unwrap().clear();
+        self.prime_output();
         Ok(())
+    }
+
+    /// Restore the existing 40 ms scheduling lead after a blocking host pause.
+    /// Never clear completed PCM or pending MIDI; this does not enlarge the 150 ms cap.
+    pub fn prime_output(&self) {
+        if self.output && self.is_sc55() {
+            let lead = (self.mixer.out_rate*0.04) as usize*2;
+            let mut ring = self.ring.lock().unwrap();
+            for _ in ring.len()..lead { ring.push_front(0.0); }
+        }
     }
 
     fn sequence(&mut self, dt: f64) {
@@ -176,14 +189,22 @@ impl Audio {
                 for s in chunk { *s = s.clamp(-1.0, 1.0); }
             }
         }
-        if self.output {
-            let mut ring = self.ring.lock().unwrap();
-            ring.extend(tmp.iter().copied());
-            // keep latency bounded (~150 ms)
-            let max = (self.mixer.out_rate * 0.15) as usize * 2;
-            while ring.len() > max { ring.pop_front(); }
+        let queued = if let Some(crate::midi_out::MidiOut::Sc55Worker(w)) = &mut self.midi {
+            w.submit(&tmp,self.mixer.out_rate)
+        } else { false };
+        if !queued {
+            if matches!(self.midi,Some(crate::midi_out::MidiOut::Sc55Worker(_))) {
+                eprintln!("SC-55 audio worker failed or exceeded its 150 ms budget; music disabled");
+                self.midi = None; // stop/join before publishing fallback effects
+            }
+            if self.output { Self::publish(&mut self.ring.lock().unwrap(),&tmp,self.mixer.out_rate); }
         }
         self.tmp = tmp;
+    }
+    pub(crate) fn publish(ring: &mut VecDeque<f32>, samples: &[f32], rate: f64) {
+        ring.extend(samples.iter().copied());
+        let max = (rate*0.15) as usize*2;
+        while ring.len()>max { ring.pop_front(); }
     }
 }
 

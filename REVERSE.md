@@ -108,19 +108,39 @@ Watcom CRT.
   0.8.0 backend (revision in `third_party/nuked-sc55/NOTICE`); compiled by `build.rs`.
   Backend source is unmodified; no Roland ROMs are included. `run/sc55/` is
   SHA-256 checked against upstream definitions, preferring MK1 then MK2.
-- Options → Display → Music Output selects Windows MIDI / SC-55; stored as
+- Options → Enhancements → Music Output selects Windows MIDI / SC-55; stored as
   `music_output=windows|sc55` in NATIVE.CNF. Failure retains the old output and
   shows a menu warning. Successful switches silence the old synth and restart
   the current song to restore programs/controllers.
-- SC-55 PCM is linearly resampled to the CPAL host rate and mixed with samples;
-  MIDI sequencing and synthesis advance in <=64-frame chunks. Host pages keep
+- SC-55 PCM is linearly resampled to the CPAL host rate and mixed with samples.
+  `sc55_worker.rs` now owns the handle on a dedicated thread (no unsafe Send).
+  The game advances sample voices and queues effects plus MIDI at 64-frame offsets;
+  the worker renders into the existing device ring. Queued + ready PCM stays within
+  the original 150 ms ceiling, with a 40 ms startup lead. Completed stale PCM can
+  be trimmed as before; MIDI is not discarded. Over-budget pending synthesis
+  explicitly disables music rather than stalling the game. Worker cancellation
+  and join precede output replacement/ring clear, preventing stale post-switch writes.
+  Windows MMCSS Audio scheduling is reverted on shutdown. MSVC `/GL` + `/LTCG`
+  optimizes cross-translation-unit firmware/PCM calls without backend-source,
+  emulated clock, sample-rate or voice-count changes. Host pages keep
   synthesizing music/tails without advancing sample voices. HMI SysEx is still
   skipped; initialization uses the emulator's GM reset.
 - Missing/unknown ROM rejection and settings round-trip tested; 56 unit tests
   pass (8 ignored). Release and static-runtime Windows GUI builds pass. Native
   menu screenshot confirms the selector; the full menu smoke script exceeded
   its 300-second budget after options-return. Audible ROM-backed validation
-  remains pending (ignored `sc55_renders` check).
+  was subsequently checked with user ROMs: worker/synchronous PCM is bit-identical
+  at 44.1/48 kHz with scheduled MIDI and effects; switch/failure/shutdown checks pass.
+  58 ordinary tests plus the ROM-backed worker regression pass (9 ignored in the
+  ordinary suite). docs/SC55_PERFORMANCE.md records the optimization and limitations:
+  2560x1080 fullscreen/V-Sync/48 kHz audio, three 10-second pairs give SC-55
+  ~57 FPS off/on, versus Windows MIDI ~59/~58 and previous synchronous SC-55
+  ~32/~30. Emulation/audio work on the game thread falls from ~19-20 to ~5 ms.
+  Final 60/120-second measurement windows retain live synthesis and clip no PCM.
+  Strict zero-underrun checks still fail on the first interval (3 SC-55 callbacks,
+  4 Windows MIDI), with zero in the following five; do not claim glitch-free audio.
+  Early worker-only attempts disabled music under overload and are retained as
+  failed tests, not performance passes. User ROMs/config/saves were unchanged.
   Combined executable distribution is GPL-2.0-or-later; portable packager bundles
   corresponding source including the core, bridge/build scripts and Cargo deps.
 
@@ -336,6 +356,69 @@ DrawTopFlat 6%, DrawWall 4%.
   vsync_waits_for_compositor_presentation -- --ignored`. The menu smoke suite
   hit the 240-second harness limit after producing both Options screenshots;
   the new Display layout was visually checked, but the full suite did not finish.
+- Host menu border investigation: the old clear rect (x14..624) leaves original
+  22-pixel-pitch separator stubs at x12..13 / x624..627. Original separators are
+  four rows: two light (RGB AEAAAE), then two shadow (4D4D55), with shaped caps
+  joining the side bevels. Original value divider occupies x350..355. Clean side
+  profiles are available at source y160; full-width separator at y206..209.
+  Keep the top/bottom bevels, clear only x16..623 / y138..463, and reuse artwork
+  strips rather than drawing flat gray lines. Footer font must stay above y464.
+  Implemented shared MenuArt separator/column strips on Enhancements and every
+  Actions page, re-stitched both side borders, framed the host footer and moved
+  navigation text to y450. Original Game footer separator remains intact. Long
+  status/error text clips before the right bevel; Actions hint shortened to fit.
+  61 release tests pass (10 ignored), including all Actions pages, junctions,
+  rounded corners, footer bounds and long statuses. Release executable rebuilt;
+  tools/check_menu_bevels.py passes with isolated real-game title Options and
+  original palette/profile checks. Visually checked enhancements-beveled.bmp
+  under out/native-check/. No user settings, saves or commercial artwork edited.
+- Scanlines removed at the user's request: deleted the filter/SIMD kernel, menu
+  row, F6 handlers, config fields and comparison switches. Old config keys are
+  ignored, not re-saved. Renderer moves to row 7, Back to row 8; centered tabs,
+  Vulkan and SC-55 remain. 60 release tests pass, including legacy-config,
+  menu-color, renderer navigation and frozen quit-frame regressions; release
+  executable rebuilt. User settings/saves were not edited. Notes below are history.
+- Historical scanline appearance follow-up: square the sine beam to widen the soft dark
+  bands without changing pitch, bright centers, strength limits or native-size
+  fade. Shared filter applies to gameplay/menus/movies on both presenters;
+  RGB/SIMD reference and native smoke checks use the broadened formula. Release:
+  61 tests pass; real-game RGB reference/camera parity pass. Full native smoke
+  hit the 240-second harness timeout before off-toggle/menu checks completed.
+- Initial scanlines: matched sibling Disruptor's GL/Vulkan presentation beam
+  `1-strength*clamp(output_height/native_lines-1,0,1)*(1-sin(pi*fract(v*native_lines)))`.
+  CyberMage uses its original 480-line grid (200 in mode 13h), independent of the
+  adaptive world raster; movies use their decoded height and scaled content rect.
+  CPU output-only RGB modulation uses an 8-bit gain per output row and baseline
+  x86-64 SSE2 (four pixels per iteration), with scalar tails/non-x86-64 fallback.
+  RGB is within one step of the shader; alpha is preserved. Fully bright rows
+  skip the pass. No guest framebuffer/palette changes. Death/quit snapshots remain
+  unfiltered so presentation applies the beam once. Enhancements/Actions include
+  scanlines via present_menu; the render wrapper does not apply them twice. Help
+  stays unfiltered. Display tab/page/Actions entry is now named ENHANCEMENTS.
+  Enhancements has Off/Light/Medium/Strong (25/50/75%); F6 toggles and immediately saves
+  `scanlines` / `scanline_strength` in NATIVE.CNF, preserving strength when off.
+  This is applied at selected output resolution before minifb window scaling;
+  match output/window sizes for best results. No graphics backend/dependencies added.
+  Validation: release build, 58 Rust checks passed (8 ignored), including shader
+  reference/SIMD tails, native-size fade, strength/config/navigation, single-pass
+  host menus and quit snapshot checks.
+  `python tools/check_native.py --scanlines-only`: isolated real-game screenshots
+  match the beam to within one RGB step; held F6 toggles once and persists, toggling
+  back restores byte-identical output, and guest camera state is unchanged.
+  Renamed/filtered menu screenshot visually checked. Performance investigation:
+  docs/SCANLINE_PERFORMANCE.md, logs in out/performance-check/scanlines/. At the
+  saved 2560x1080 output, fixed 1478x623 world, borderless 3440x1440/120 Hz desktop,
+  alternating three-pair fullscreen measurements reduce filter overhead from
+  ~3.6 to ~1.3 ms; uncapped scanlines-on capacity rises ~72 to ~92 FPS. Real-device
+  48 kHz audio + V-Sync gives Windows MIDI ~57 off / ~56 on, but saved SC-55
+  ~32 off / ~30 on: synthesis adds ~14 ms in the emulation/audio stage and is the
+  main measured choppiness bottleneck even with scanlines disabled. User settings
+  and ROMs were not changed. A disturbed capacity run is retained alongside the
+  stable repeat; this is not campaign/audio-underrun certification. Immediate
+  optional workaround: Enhancements -> Music Output -> Windows MIDI. No SC-55
+  threading/clock/fidelity change was attempted during that scanline pass; the
+  subsequent faithful worker + native optimization is documented above and in
+  docs/SC55_PERFORMANCE.md.
 - Host pages reuse the original Options bitmap at `Xox+0xE541C`, palette 31 from
   `Xox+0xE5348` (6-bit RGB), and loaded font 3. `_font_table` (0x20732F), 32 bytes
   per font: bitmap pointer +0, height +20, signed spacing +26, glyph stride +30.
@@ -449,6 +532,45 @@ DrawTopFlat 6%, DrawWall 4%.
   Floor patches contain 0% black at 640×480, 1080p, 4K, 5120×1440 and 5120×2160.
 - Still needs physical-controller / full campaign verification, including vehicle
   transitions, shops, save-name entry and sky-level rendering at wide aspect ratios.
+
+## Vulkan presentation (experimental Windows backend)
+- `presentation.rs` owns minifb's window and optional `vulkan.rs` renderer; GPU
+  resources drop before the HWND. Select Enhancements → Renderer, saved as
+  `renderer=software|vulkan`, or `--renderer vulkan`. Software remains default
+  and runtime fallback; benchmark assertions reject silent fallback.
+- Transfer-only native ash backend: reused coherent mapped upload buffer and
+  BGRA8 UNORM optimal image, nearest blit into an aspect-preserving swapchain.
+  CPU world rendering, palette expansion and HUD/composition remain unchanged;
+  movies/host pages share this presenter. GPU indexed composition is future work,
+  not implemented in this pass. Scanlines have since been removed.
+- Requires Windows/Vulkan 1.1 + surface/swapchain maintenance1 + present wait/id
+  and dependencies. One GPU submission in flight; present semaphores/fences
+  indexed by image. maintenance1 retirement fences precede swapchain destruction;
+  FIFO/present-ID wait replaces DWM wait. Source/canvas/vsync changes recreate
+  appropriate resources; backend changes recreate the HWND to avoid GDI retaining
+  a stale framebuffer pointer. Hardware timestamp queries measure transfer/blit;
+  host waits are reported separately and excluded from CPU frame work.
+- First-use driver work is prewarmed outside guest/audio time; benchmark window
+  creation resets its realtime clock. SC-55's existing 40 ms lead is re-primed
+  without discarding PCM/MIDI or increasing the 150 ms budget. This fixes the
+  first prototype disabling music on a 350 ms initialization catch-up; that
+  failed FPS result is retained, not used as a successful measurement.
+- Same-boot alternating three 10-second pairs, 2560x1080 logical / 3440x1440 desktop,
+  120 Hz, Light scanlines, fixed 1478x623 world, real 48 kHz SC-55 + V-Sync:
+  median software 56.89 FPS / Vulkan 67.82 (+19%), CPU upload 1.382 / 0.870 ms,
+  hardware Vulkan transfer/blit p50 ~1.197 ms. Short opening-scene capacity checks,
+  not campaign or perfect frame-pacing guarantees. Strict audio check still fails:
+  software 0/0/0 underrun callbacks, Vulkan 7/1/4; no PCM clipping or synth disable.
+- 59 ordinary release tests pass (10 ignored). GPU RGB/orientation/scaling/resize/
+  vsync/shutdown readback and actual fullscreen game presentation pass Khronos
+  synchronization validation with zero API errors. ROM-backed PCM/switch/resume
+  check passes. Privately extracted official validation layer temporarily registered
+  only with explicit permission, then original registry state restored and checked;
+  no SDK/driver installed. Tests retain the zero-underrun assertion.
+- docs/VULKAN.md details limits, reproduction and next shader work; logs under
+  out/vulkan-check/ and out/performance-check/vulkan/. Other GPUs, HDR/rotation,
+  movies, focus/minimize and busy combat still need broader checks. User settings,
+  saves and ROMs were unchanged. Vulkan remains opt-in because of audio faults.
 
 ## High-resolution performance
 - Composition scales source-pixel runs instead of dividing per output pixel, skips
@@ -614,7 +736,8 @@ DrawTopFlat 6%, DrawWall 4%.
 - [ ] Renderer (image1.cpp + scale.ASM) — performance critical
 - [x] Restore HMI music volume through the existing Windows General MIDI output
 - [x] Fix open doorway small-step collision; isolated latest-save regression
-- [ ] Validate ROM-backed SC-55 playback, host-menu audio, switching and CPU cost (SC-55 backend builds on Windows; other platforms still need build/runtime checks)
+- [ ] Resolve Vulkan-specific SC-55 underruns (7/1/4 vs paired software 0/0/0); preserve strict check/latency ceiling. Broaden Vulkan GPU/focus/movie/combat validation before enabling by default; consider indexed-world/HUD composition (docs/VULKAN.md).
+- [ ] Finish SC-55/audio validation: resolve shared initial-run underruns (3 SC-55 / 4 Windows MIDI callbacks; retain strict check and 150 ms cap), exercise movies/focus/host menus and busy combat, and check other platforms. ROM-backed PCM/switching/shutdown and near-MIDI game FPS are measured in docs/SC55_PERFORMANCE.md.
 - [ ] Non-Windows default MIDI device backend (embedded SC-55 now available in code)
 - [ ] TGV movie player (replaces PLAYTGV.EXE)
 ### Verification

@@ -363,9 +363,9 @@ pub fn bindings(p: Pad, c: &Cpu, playing: bool) -> [bool; 256] {
 /// Less-used original commands without awkward multi-button chords.
 #[derive(Clone, Copy)]
 pub enum Command { Key(u8), Bound(u32), Options, Help }
-const ACTIONS: &[(&str,Command)] = &[
+pub(crate) const ACTIONS: &[(&str,Command)] = &[
     ("AUTOMAP ON/OFF",Command::Bound(0x1E3C78)),
-    ("DISPLAY AND INPUT OPTIONS",Command::Options),
+    ("ENHANCEMENTS",Command::Options),
     ("PAUSE ON/OFF",Command::Key(0x19)),
     ("CONTROL GUIDES",Command::Help),
     ("SKIP NPC SPEECH",Command::Key(0x2B)),
@@ -428,8 +428,9 @@ impl Actions {
     pub fn draw(&self, art: &display::MenuArt, out: &mut Vec<u32>) -> (usize,usize) {
         let page = self.selected / 8;
         art.page(out,2,&format!("ACTIONS - PAGE {} / {}",page+1,ACTIONS.len().div_ceil(8)),
-            "ARROWS SELECT   PGUP/PGDN OR LB/RB PAGE   ENTER/A OK   ESC/B BACK");
+            "ARROWS SELECT  PGUP/PGDN/LB/RB PAGE  ENTER/A OK  ESC/B BACK");
         for (row,i) in (page*8..((page+1)*8).min(ACTIONS.len())).enumerate() {
+            art.separator(out,146+(row+1)*32-6);
             art.label(out,46,146+row*32,ACTIONS[i].0,i == self.selected);
         }
         (640,480)

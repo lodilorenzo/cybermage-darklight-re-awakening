@@ -10,15 +10,17 @@ pub const MODES: &[(usize, usize)] = &[
     (3840, 1600), (3840, 2160), (5120, 1440), (5120, 2160),
 ];
 
-pub const MENU_TABS: [&str; 3] = ["GAME", "DISPLAY", "ACTIONS"];
+pub const MENU_TABS: [&str; 3] = ["GAME", "ENHANCEMENTS", "ACTIONS"];
 pub const TAB_WIDTH: usize = 384 / MENU_TABS.len();
-pub const SETTINGS_BACK: usize = 7;
-pub const SETTINGS_ROW_HEIGHT: usize = 28;
+pub const SETTINGS_BACK: usize = 8;
+pub const SETTINGS_ROW_HEIGHT: usize = 26;
 
 pub struct Display {
     pub mode: usize,
     pub fullscreen: bool,
     pub vsync: bool,
+    pub vulkan: bool,
+    pub renderer_message: String,
     pub music_sc55: bool,
     pub music_message: String,
     pub sensitivity: f32,
@@ -109,7 +111,7 @@ impl DeathMelt {
 impl Display {
     pub fn new(path: &Path) -> Self {
         let mut s = Self {
-            mode: 3, fullscreen: false, vsync: false, music_sc55: false, music_message: String::new(), sensitivity: 1.0, deadzone: 0.18, invert_y: false,
+            mode: 3, fullscreen: false, vsync: false, vulkan: false, renderer_message: String::new(), music_sc55: false, music_message: String::new(), sensitivity: 1.0, deadzone: 0.18, invert_y: false,
             options_open: false, help_open: false, help_keyboard: false, ui_pointer: (320,240), options_original: false, pending_game_options: false, options_in_game: false, options_return: 0,
             tab: 0, art: MenuArt::default(), row: 0,
             current_view: 0, pending: false, presented: false, recording_hud: false,
@@ -131,6 +133,7 @@ impl Display {
                     "invert_y" => s.invert_y = value == "true",
                     "fullscreen" => s.fullscreen = value == "true",
                     "vsync" => s.vsync = value == "true" && cfg!(windows),
+                    "renderer" => s.vulkan = value == "vulkan",
                     "music_output" => s.music_sc55 = value == "sc55",
                     _ => {}
                 }
@@ -165,7 +168,7 @@ impl Display {
     pub fn size(&self) -> (usize, usize) { MODES[self.mode] }
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
         let (w, h) = self.size();
-        std::fs::write(path, format!("resolution={w}x{h}\nsensitivity={}\ndeadzone={}\ninvert_y={}\nfullscreen={}\nvsync={}\nmusic_output={}\n", self.sensitivity, self.deadzone, self.invert_y, self.fullscreen, self.vsync, if self.music_sc55 { "sc55" } else { "windows" }))
+        std::fs::write(path, format!("resolution={w}x{h}\nsensitivity={}\ndeadzone={}\ninvert_y={}\nfullscreen={}\nvsync={}\nrenderer={}\nmusic_output={}\n", self.sensitivity, self.deadzone, self.invert_y, self.fullscreen, self.vsync, if self.vulkan { "vulkan" } else { "software" }, if self.music_sc55 { "sc55" } else { "windows" }))
     }
     pub fn change(&mut self, delta: i32) {
         match self.row {
@@ -176,6 +179,7 @@ impl Display {
             4 => self.fullscreen = !self.fullscreen,
             5 if cfg!(windows) => self.vsync = !self.vsync,
             6 => { self.music_sc55 = !self.music_sc55; self.music_message.clear(); }
+            7 => { self.vulkan = !self.vulkan; self.renderer_message.clear(); }
             _ => {}
         }
     }
@@ -339,7 +343,7 @@ pub fn present_help(d: &Display, out: &mut Vec<u32>) -> (usize,usize) {
         KEYBOARD.get_or_init(|| include_bytes!("../../../assets/keyboard-help.rgb")
             .chunks_exact(3).map(|p| ((p[0] as u32)<<16) | ((p[1] as u32)<<8) | p[2] as u32).collect()).as_slice()
     } else {help_image()};
-    compose(image,(1280,960),size,&[],(0,0),&[],(0,0,0,0),false,&[0;256],None,out);
+    present_image(image,(1280,960),size,out);
     size
 }
 
@@ -901,7 +905,7 @@ pub fn ui_rect(w: usize, h: usize, sw: usize, sh: usize) -> (usize, usize, usize
 
 pub fn menu(s: &Display, out: &mut Vec<u32>) -> (usize, usize) {
     let art = &s.art;
-    art.page(out, 1, "DISPLAY INPUT AND MUSIC", "ARROWS/DPAD CHANGE  ENTER/A OK  CLICK/X SELECT  ESC/B BACK");
+    art.page(out, 1, "ENHANCEMENTS",  "ARROWS/DPAD CHANGE  ENTER/A OK  CLICK/X SELECT  ESC/B BACK");
     let (w, h) = s.size();
     let rows = [("RESOLUTION", format!("{w}X{h}")), ("LOOK SPEED", format!("{:.2}", s.sensitivity)),
         ("STICK DEADZONE", format!("{:.3}", s.deadzone)),
@@ -909,17 +913,18 @@ pub fn menu(s: &Display, out: &mut Vec<u32>) -> (usize, usize) {
         ("FULLSCREEN", if s.fullscreen { "ON" } else { "OFF" }.into()),
         ("V-SYNC", if !cfg!(windows) { "UNAVAILABLE" } else if s.vsync { "ON" } else { "OFF" }.into()),
         ("MUSIC OUTPUT", if s.music_sc55 { "SC-55" } else { "WINDOWS MIDI" }.into()),
+        ("RENDERER", if !s.renderer_message.is_empty() { "SOFTWARE (FALLBACK)" } else if s.vulkan { "VULKAN (EXPERIMENTAL)" } else { "SOFTWARE" }.into()),
         (if s.options_original { "BACK TO GAME OPTIONS" } else { "BACK TO GAME" }, String::new())];
+    art.column(out,138,146 + SETTINGS_BACK * SETTINGS_ROW_HEIGHT - 6);
     for (i, (label, value)) in rows.iter().enumerate() {
         let y = 146 + i * SETTINGS_ROW_HEIGHT;
-        art.fill(out, 14, y + 24, 610, 1, 0x78787C);
+        art.separator(out, y + SETTINGS_ROW_HEIGHT - 6);
         art.label(out, 46, y, label, i == s.row);
         art.text(out, 364, y, value, 175);
     }
-    let status = if s.music_message.is_empty() { "SC-55 REQUIRES YOUR ROMS IN RUN/SC55" } else { &s.music_message };
-    for (i, line) in [status, "WASD MOVE  MOUSE LOOK  SPACE JUMP  E USE",
-        "F1 GUIDES  F4/BACK ACTIONS"].iter().enumerate() {
-        art.text(out, 46, 378 + i * 28, line, 125);
+    let status = if !s.renderer_message.is_empty() { &s.renderer_message } else if s.music_message.is_empty() { "SC-55 REQUIRES YOUR ROMS IN RUN/SC55" } else { &s.music_message };
+    for (i, line) in [status, "F1 GUIDES  F4/BACK ACTIONS"].iter().enumerate() {
+        art.text(out, 46, 400 + i * 28, line, 125);
     }
     (640, 480)
 }
@@ -981,6 +986,25 @@ impl MenuArt {
     pub fn fill(&self, out: &mut [u32], x: usize, y: usize, w: usize, h: usize, color: u32) {
         for yy in y..(y + h).min(480) { out[yy * 640 + x..yy * 640 + (x + w).min(640)].fill(color); }
     }
+    /// Reuse the original four-row bevel, including its joins to both side borders.
+    pub fn separator(&self, out: &mut [u32], y: usize) {
+        for dy in 0..4.min(480usize.saturating_sub(y)) {
+            let row = &mut out[(y+dy)*640+12..(y+dy)*640+628];
+            if self.ready() {
+                row.copy_from_slice(&self.background[(206+dy)*640+12..(206+dy)*640+628]);
+            } else {
+                row.fill(if dy < 2 {0xAEAAAE} else {0x4D4D55});
+            }
+        }
+    }
+    /// Original label/value divider; horizontal bevels overlay its junctions.
+    pub fn column(&self, out: &mut [u32], top: usize, bottom: usize) {
+        for y in top..bottom.min(480) {
+            let row = &mut out[y*640+350..y*640+356];
+            if self.ready() { row.copy_from_slice(&self.background[160*640+350..160*640+356]); }
+            else { row.copy_from_slice(&[0x797982,0x797982,0xAEAAAE,0xAEAAAE,0x3C3C3C,0x3C3C3C]); }
+        }
+    }
     pub fn text(&self, out: &mut [u32], mut x: usize, y: usize, text: &str, color: usize) {
         if self.stride < 2 { return; }
         for ch in text.to_ascii_uppercase().bytes() {
@@ -989,20 +1013,23 @@ impl MenuArt {
             let w = u16::from_le_bytes([glyph[0], glyph[1]]) as usize;
             if w * self.height + 2 > glyph.len() { continue; }
             for yy in 0..self.height { for xx in 0..w {
-                if glyph[2 + yy * w + xx] < 0xFE && x + xx < 640 && y + yy < 480 {
+                if glyph[2 + yy * w + xx] < 0xFE && x + xx < 624 && y + yy < 480 {
                     out[(y + yy) * 640 + x + xx] = self.palette[color];
                 }
             } }
             x = (x as isize + w as isize + self.spacing as isize).max(0) as usize;
         }
     }
+    fn text_width(&self, text: &str) -> usize {
+        if self.stride < 2 { return 0; }
+        text.to_ascii_uppercase().bytes().map(|ch| {
+            let p = ch as usize * self.stride;
+            u16::from_le_bytes([self.font[p],self.font[p+1]]) as isize + self.spacing as isize
+        }).sum::<isize>().max(0) as usize
+    }
     pub fn label(&self, out: &mut [u32], x: usize, y: usize, text: &str, selected: bool) {
         if selected && self.stride >= 2 {
-            let width: isize = text.to_ascii_uppercase().bytes().map(|ch| {
-                let p = ch as usize * self.stride;
-                u16::from_le_bytes([self.font[p],self.font[p+1]]) as isize + self.spacing as isize
-            }).sum();
-            self.fill(out, x - 2, y - 1, width.max(0) as usize + 4, self.height + 2, self.palette[117]);
+            self.fill(out, x - 2, y - 1, self.text_width(text) + 4, self.height + 2, self.palette[117]);
         }
         self.text(out, x, y, text, if selected { 255 } else { 125 });
     }
@@ -1010,13 +1037,17 @@ impl MenuArt {
         // Exactly the instruction panel's black interior; its bevel starts at x=216.
         self.fill(out, 232, 18, 392, 104, 0x080808);
         for (i, label) in MENU_TABS.iter().enumerate() {
-            self.label(out, 238 + i * TAB_WIDTH, 34, label, i == tab);
+            let width = (self.text_width(label) as isize - self.spacing as isize).max(0) as usize;
+            let center = 234 + i * TAB_WIDTH + TAB_WIDTH / 2;
+            self.label(out, center.saturating_sub(width / 2), 34, label, i == tab);
         }
         self.text(out, 238, 62, title, 175);
         self.text(out, 238, 91, "Q / E OR LT / RT TABS", 125);
-        // The old instruction box is too narrow for the full navigation hint.
-        self.fill(out, 14, 453, 610, 12, 0x080808);
-        self.text(out, 24, 453, hint, 125);
+        // Keep the guest page's layout; host pages get a framed footer above the bevel.
+        let clear_y = if tab == 0 {452} else {450};
+        if tab != 0 { self.separator(out,446); }
+        self.fill(out, 16, clear_y, 608, 464-clear_y, 0x040404);
+        self.text(out, 24, 450, hint, 125);
     }
     pub fn cursor(&self, out: &mut [u32], x: i32, y: i32) {
         let (x,y) = (x.clamp(0,633) as usize,y.clamp(0,473) as usize);
@@ -1028,21 +1059,68 @@ impl MenuArt {
         out.resize(640 * 480, 0);
         if self.background.len() == out.len() { out.copy_from_slice(&self.background); }
         else { out.fill(0); }
-        self.fill(out, 14, 136, 610, 330, 0x080808);
+        // Do not erase the top/bottom or inner side bevels. Remove the old row
+        // junctions from both edges before adding this page's differently spaced rows.
+        self.fill(out, 16, 138, 608, 326, 0x040404);
+        if self.ready() {
+            for y in 146..458 {
+                out[y*640+12..y*640+16].copy_from_slice(&self.background[160*640+12..160*640+16]);
+                out[y*640+624..y*640+628].copy_from_slice(&self.background[160*640+624..160*640+628]);
+            }
+        }
         self.header(out, tab, title, hint);
     }
+}
+
+/// Square-pixel scaling shared by host pages and movie presentation.
+pub fn present_image(image: &[u32], source: (usize,usize), size: (usize,usize), out: &mut Vec<u32>) {
+    compose(image, source, size, &[], (0,0), &[], (0, 0, 0, 0), false, &[0; 256], None, out);
 }
 
 /// All host pages use the selected output resolution, with a square-pixel UI.
 pub fn present_menu(d: &Display, page: &[u32], out: &mut Vec<u32>) -> (usize, usize) {
     let size = d.size();
-    compose(page, (640, 480), size, &[], (0,0), &[], (0, 0, 0, 0), false, &[0; 256], None, out);
+    present_image(page,(640,480),size,out);
     size
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn obsolete_filter_settings_are_ignored_and_not_saved() {
+        let path = std::env::temp_dir().join(format!("cybermage-old-filter-config-{}",std::process::id()));
+        std::fs::write(&path,"resolution=1280x960\nrenderer=vulkan\nscanlines=true\nscanline_strength=0.75\n").unwrap();
+        let d = Display::new(&path);
+        assert_eq!(d.size(),(1280,960));
+        assert!(d.vulkan);
+        d.save(&path).unwrap();
+        let saved = std::fs::read_to_string(&path).unwrap();
+        assert!(!saved.contains("scanline"));
+        assert!(saved.contains("renderer=vulkan"));
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn enhancements_and_actions_preserve_composed_colors() {
+        let path = std::env::temp_dir().join(format!("cybermage-menu-colors-{}",std::process::id()));
+        let mut m = Machine::new(crate::vfs::Vfs::new(path.join("iso"),path.join("run")));
+        let c = Cpu::new();
+        m.display.mode = parse_mode("1280x960").unwrap();
+        m.display.options_open = true;
+        let mut page = Vec::new();
+        menu(&m.display,&mut page);
+        let mut expected = Vec::new();
+        present_image(&page,(640,480),m.display.size(),&mut expected);
+        let mut actual = Vec::new();
+        render(&mut m,&c,&mut actual);
+        assert_eq!(actual,expected,"Enhancements changed the composed pixels");
+        let page = vec![0xFF8040;640*480];
+        present_menu(&m.display,&page,&mut actual);
+        assert!(actual.iter().all(|&p| p == 0xFF8040));
+        std::fs::remove_dir_all(path).unwrap();
+    }
+
     #[test]
     fn tint_and_black_hud_pixels_are_not_stretched_world_overlays() {
         let dir = std::env::temp_dir().join(format!("cybermage-display-{}",
@@ -1336,7 +1414,7 @@ mod tests {
         }
     }
     #[test]
-    fn scanline_composition_matches_pixel_reference() {
+    fn composition_matches_pixel_reference() {
         let legacy: Vec<u32> = (0..640*480).map(|i| if i % 7 == 0 { 0 } else { i as u32 }).collect();
         let hud: Vec<bool> = (0..640*480).map(|i| i % 7 == 0 || i % 11 == 0).collect();
         let pal = std::array::from_fn(|i| i as u32 * 0x010101);
@@ -1393,7 +1471,7 @@ mod tests {
         let mut output = Vec::new();
         for mode in 0..MODES.len() {
             m.display.mode = mode;
-            let (w,h) = present_help(&m.display,&mut output);
+            let (w,h) = render(&mut m,&c,&mut output);
             assert_eq!(output.len(),w*h);
             let (uw,uh,ox,oy) = ui_rect(w,h,1280,960);
             for (x,y) in [(ox,oy),(ox+uw/2,oy+uh/2),(ox+uw-1,oy+uh-1)] {
@@ -1501,15 +1579,102 @@ mod tests {
         m.display.save(&file).unwrap();
         assert!(!Display::new(&file).music_sc55);
         settings_key(&mut m.display,0x50);
+        assert_eq!(m.display.row,7);
+        assert!(!m.display.vulkan);
+        settings_key(&mut m.display,0x1C);
+        assert!(m.display.vulkan && m.display.options_open);
+        m.display.save(&file).unwrap();
+        assert!(Display::new(&file).vulkan);
+        settings_key(&mut m.display,0x4B);
+        assert!(!m.display.vulkan);
+        m.display.save(&file).unwrap();
+        assert!(!Display::new(&file).vulkan);
+        settings_key(&mut m.display,0x50);
         assert_eq!(m.display.row,SETTINGS_BACK);
         settings_key(&mut m.display,0x1C);
         assert!(!m.display.options_open);
         std::fs::remove_dir_all(path).unwrap();
     }
     #[test]
+    fn host_pages_reuse_beveled_separators_and_clean_both_border_edges() {
+        let mut d = Display::new(Path::new("__menu_bevel_no_config__"));
+        let mut art = MenuArt { background: vec![0x123456;640*480],
+            height: 14, stride: 16, font: vec![0;256*16], ..MenuArt::default() };
+        for glyph in art.font.chunks_exact_mut(16) {
+            glyph[0] = 1;
+            glyph[2..6].fill(0xFE); // Original font's four-row top bearing.
+        }
+        art.palette[125] = 0x20E718; art.palette[255] = 0xFBF7F3;
+        let left = [0x797982,0x797982,0x3C3C3C,0x3C3C3C];
+        let right = [0x3C3C3C,0x3C3C3C,0x797982,0x797982];
+        art.background[160*640+12..160*640+16].copy_from_slice(&left);
+        art.background[160*640+624..160*640+628].copy_from_slice(&right);
+        let column = [0x797982,0x797982,0xAEAAAE,0xAEAAAE,0x3C3C3C,0x3C3C3C];
+        art.background[160*640+350..160*640+356].copy_from_slice(&column);
+        for dy in 0..4 {
+            art.background[(206+dy)*640+12..(206+dy)*640+628].fill(if dy < 2 {0xAEAAAE} else {0x4D4D55});
+        }
+        d.art = art;
+        d.music_message = "X".repeat(700); // An error/status must not paint over the right bevel.
+        let mut out = Vec::new();
+        for page in 0..=crate::gamepad::ACTIONS.len().div_ceil(8) {
+            let mut separators = vec![446];
+            if page == 0 {
+                menu(&d,&mut out);
+                separators.extend((0..=SETTINGS_BACK).map(|i| 146+(i+1)*SETTINGS_ROW_HEIGHT-6));
+                assert_eq!(&out[150*640+350..150*640+356],&column);
+                assert_eq!(out[360*640+352],0x040404,"Back row inherited a value column");
+            } else {
+                let mut actions = crate::gamepad::Actions::default();
+                actions.selected = (page-1)*8;
+                actions.draw(&d.art,&mut out);
+                separators.extend((0..8.min(crate::gamepad::ACTIONS.len()-actions.selected)).map(|i| 146+(i+1)*32-6));
+                assert_eq!(out[150*640+352],0x040404,"Actions inherited a value column");
+            }
+            for &y in &separators { for dy in 0..4 {
+                assert_eq!(&out[(y+dy)*640+12..(y+dy)*640+628],
+                    &d.art.background[(206+dy)*640+12..(206+dy)*640+628]);
+            } }
+            for y in 146..458 {
+                if separators.iter().any(|&s| (s..s+4).contains(&y)) { continue; }
+                assert_eq!(&out[y*640+12..y*640+16],&left,"left stub at {y}");
+                assert_eq!(&out[y*640+624..y*640+628],&right,"right stub at {y}");
+            }
+            assert_eq!(&out[464*640..],&d.art.background[464*640..],"bottom corners changed");
+            assert_eq!(&out[128*640..138*640],&d.art.background[128*640..138*640],"top bevel changed");
+        }
+        out.clone_from(&d.art.background);
+        d.art.header(&mut out,0,"GAME OPTIONS","ARROWS SELECT  ENTER/A OK  ESC/B BACK");
+        assert_eq!(&out[448*640+16..452*640],&d.art.background[448*640+16..452*640],"guest footer separator changed");
+        assert_eq!(&out[464*640..],&d.art.background[464*640..],"guest footer crossed the bottom bevel");
+    }
+    #[test]
+    fn menu_tab_labels_are_centered_in_their_click_regions() {
+        let mut art = MenuArt { height: 1, stride: 32, spacing: 2, ..MenuArt::default() };
+        art.font = vec![0xFF; art.stride*256];
+        art.palette[117] = 1; art.palette[125] = 2; art.palette[255] = 3;
+        for ch in b'A'..=b'Z' {
+            let width = 4 + ch as usize % 7;
+            let p = ch as usize*art.stride;
+            art.font[p..p+2].copy_from_slice(&(width as u16).to_le_bytes());
+            art.font[p+2..p+2+width].fill(0);
+        }
+        for selected in 0..MENU_TABS.len() {
+            let mut out = vec![0;640*480];
+            art.header(&mut out,selected,"","");
+            for i in 0..MENU_TABS.len() {
+                let start = 234+i*TAB_WIDTH;
+                let color = if i == selected {3} else {2};
+                let xs: Vec<_> = (start..start+TAB_WIDTH).filter(|&x| out[34*640+x] == color).collect();
+                assert!(!xs.is_empty());
+                assert_eq!((xs[0]+xs[xs.len()-1]+1)/2,start+TAB_WIDTH/2);
+            }
+        }
+    }
+    #[test]
     fn saves_get_local_timestamps_without_text_entry_or_other_slot_changes() {
         assert_eq!(format_save_name([2024,2,29,7,5,9]),"2024-02-29 07:05:09");
-        assert_eq!(MENU_TABS,["GAME","DISPLAY","ACTIONS"]);
+        assert_eq!(MENU_TABS,["GAME","ENHANCEMENTS","ACTIONS"]);
         let path = std::env::temp_dir().join(format!("cybermage-save-name-{}",std::process::id()));
         let mut m = Machine::new(crate::vfs::Vfs::new(path.join("iso"),path.join("run")));
         let mut c = Cpu::new();

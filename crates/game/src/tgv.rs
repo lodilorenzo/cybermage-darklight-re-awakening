@@ -249,7 +249,7 @@ impl Movie {
 }
 
 /// Play a movie requested via `spawnl(playtgv.exe, file, ...)`.
-pub fn play_spawned(window: &mut minifb::Window, emu: &Emu, prog: &str, args: &[String]) {
+pub fn play_spawned(window: &mut crate::presentation::HostWindow, emu: &mut Emu, prog: &str, args: &[String]) {
     if !prog.to_ascii_lowercase().contains("playtgv") {
         eprintln!("[exec] unsupported program {}", prog);
         return;
@@ -263,7 +263,7 @@ pub fn play_spawned(window: &mut minifb::Window, emu: &Emu, prog: &str, args: &[
     play(window, emu, &movie);
 }
 
-fn play(window: &mut minifb::Window, emu: &Emu, movie: &Movie) {
+fn play(window: &mut crate::presentation::HostWindow, emu: &mut Emu, movie: &Movie) {
     let mut dec = Tgv::new();
     let mut rgb: Vec<u32> = Vec::new();
     let start = Instant::now();
@@ -294,6 +294,7 @@ fn play(window: &mut minifb::Window, emu: &Emu, movie: &Movie) {
             ring.lock().unwrap().extend(out);
         } else if tag == TAG_KVGT || tag == TAG_FVGT {
             dec.decode(tag == TAG_KVGT, payload);
+            if dec.width == 0 || dec.height == 0 { continue; }
             frame_no += 1;
             let due = start + Duration::from_secs_f64(frame_no as f64 / 15.0);
             let now = Instant::now();
@@ -304,8 +305,8 @@ fn play(window: &mut minifb::Window, emu: &Emu, movie: &Movie) {
             for (o, &p) in rgb.iter_mut().zip(dec.frame.iter()) {
                 *o = dec.palette[p as usize];
             }
-            if window.update_with_buffer(&rgb, dec.width, dec.height).is_err() { return; }
-            crate::frontend::sync_display(emu.m.display.vsync && window.is_active());
+            if window.present(&rgb,dec.width,dec.height,emu.m.display.vsync && window.is_active()).is_err() { return; }
+            window.sync(emu.m.display.vsync && window.is_active());
             let pad = if window.is_active() { crate::gamepad::poll(emu.m.display.deadzone) }
                 else { crate::gamepad::Pad::default() };
             let keyboard_skip = window.is_active() && [minifb::Key::Escape,minifb::Key::Enter,minifb::Key::NumPadEnter,minifb::Key::Space]

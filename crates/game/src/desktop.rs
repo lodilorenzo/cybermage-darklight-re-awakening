@@ -207,7 +207,7 @@ pub fn parse_script(spec: &str) -> Result<(f64,f64,Snapshot),String> {
         ("1",Key::Key1),("2",Key::Key2),("3",Key::Key3),("SPACE",Key::Space),("CTRL",Key::LeftCtrl),
         ("SHIFT",Key::LeftShift),("ENTER",Key::Enter),("ESC",Key::Escape),("TAB",Key::Tab),("BACKSPACE",Key::Backspace),
         ("UP",Key::Up),("DOWN",Key::Down),("LEFT",Key::Left),("RIGHT",Key::Right),("PGUP",Key::PageUp),("PGDN",Key::PageDown),
-        ("F1",Key::F1),("F4",Key::F4),("[",Key::LeftBracket),("]",Key::RightBracket),("EQUAL",Key::Equal),("MINUS",Key::Minus),
+        ("F1",Key::F1),("F4",Key::F4),("F6",Key::F6),("[",Key::LeftBracket),("]",Key::RightBracket),("EQUAL",Key::Equal),("MINUS",Key::Minus),
         (",",Key::Comma),(".",Key::Period),("BACKSLASH",Key::Backslash),
     ];
     let mut keys=Vec::new();

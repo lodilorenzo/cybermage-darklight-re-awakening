@@ -33,7 +33,11 @@ fn build_sc55(target: &str) {
     build.cpp(true).opt_level(3).warnings(false).include(&backend).include(&out)
         .flag(if target.ends_with("msvc") { "/std:c++latest" } else { "-std=c++23" })
         .file("src/sc55_bridge.cpp");
-    if target.ends_with("msvc") { build.flag("/EHsc"); }
+    if target.ends_with("msvc") {
+        // Let MSVC inline the firmware/PCM hot path across backend translation units.
+        build.flag("/EHsc").flag("/GL");
+        println!("cargo:rustc-link-arg=/LTCG");
+    }
     for dir in [&backend, &backend.join("decoder2")] {
         let mut sources: Vec<_> = fs::read_dir(dir).unwrap().map(|p| p.unwrap().path())
             .filter(|p| p.extension().is_some_and(|e| e == "cpp")).collect();

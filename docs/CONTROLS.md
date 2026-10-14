@@ -46,7 +46,7 @@ movement on foot. Close or release it to return to normal movement.
 - Mouse pointer + left/right clicks retain original menu and shop behavior.
   The wheel navigates menu/selector items. With a controller use the left
   stick/D-pad, A/B/X, right-stick pointer, RT/LT clicks and RB/LB for Yes/No.
-- In Options: **Q/E** or **LT/RT** cycle Game/Display/Actions tabs. Click a tab
+- In Options: **Q/E** or **LT/RT** cycle Game/Enhancements/Actions tabs. Click a tab
   to select it. **Page Up/Page Down** or **LB/RB** change Actions subpages.
   Enter/A or a pointer click selects a native-page setting/action. Esc/B backs out.
 - Save/load through the original Esc/Start menu, then select a slot. Save names
@@ -54,6 +54,10 @@ movement on foot. Close or release it to return to normal movement.
 - F1 opens the keyboard/mouse guide. Actions chooses the last-used input guide.
   Left/Right or LB/RB switches between guides; Esc/B closes. Guides pause the game.
 - Esc, Enter, Space or A/B/Start skip movies. Input is cleared on movie return.
+- Enhancements -> Renderer selects Software or experimental Windows Vulkan
+  presentation/scaling. Leave Enhancements to apply; the software path is retained
+  as fallback. CLI: `cybermage --renderer vulkan`. Vulkan can still underrun SC-55
+  audio; [details and requirements](VULKAN.md).
 
 Held inputs are suppressed at host-overlay dismissal; context changes suppress
 held keyboard movement and keep mouse buttons in their original context, so

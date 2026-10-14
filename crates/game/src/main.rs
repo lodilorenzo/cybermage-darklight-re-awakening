@@ -24,6 +24,9 @@ mod machine;
 mod rebrand;
 mod midi_out;
 mod sc55;
+mod sc55_worker;
+mod presentation;
+#[cfg(windows)] mod vulkan;
 mod vfs;
 mod vga;
 
@@ -43,6 +46,7 @@ pub struct Config {
     pub trace: bool,
     pub realtime: bool,
     pub resolution: Option<usize>,
+    pub renderer: Option<bool>,
     /// Synthetic controller holds for reproducible headless input checks.
     pub pads: Vec<(f64, f64, gamepad::Pad)>,
     pub desktop: Vec<(f64,f64,desktop::Snapshot)>,
@@ -80,6 +84,7 @@ impl Emu {
         }
         let mut m = Machine::new(vfs);
         if let Some(mode) = cfg.resolution { m.display.mode = mode; }
+        if let Some(vulkan) = cfg.renderer { m.display.vulkan = vulkan; }
         if m.verifier.is_some() { m.display.mode = 0; }
         let exe = std::fs::read(game.join("CM_HI.EXE")).expect("CM_HI.EXE not found");
         m.load_program(&mut cpu, &exe, "").expect("load");
@@ -345,6 +350,7 @@ fn parse_args() -> Config {
         trace: false,
         realtime: false,
         resolution: None,
+        renderer: None,
         pads: Vec::new(),
         desktop: Vec::new(),
     };
@@ -374,6 +380,13 @@ fn parse_args() -> Config {
                 i += 1;
                 cfg.resolution = Some(args.get(i).and_then(|v| display::parse_mode(v))
                     .expect("--resolution requires a supported WIDTHxHEIGHT (e.g. 1920x1080)"));
+            }
+            "--renderer" => {
+                i += 1;
+                cfg.renderer = Some(match args.get(i).map(String::as_str) {
+                    Some("vulkan") => true, Some("software") => false,
+                    _ => panic!("--renderer requires vulkan or software"),
+                });
             }
             "--trace" => cfg.trace = true,
             "--realtime" => cfg.realtime = true,
@@ -526,7 +539,30 @@ fn headless(cfg: &Config) {
     }
     if let Ok(seconds) = std::env::var("CM_BENCH_SECONDS") {
         if emu.m.verifier.is_none() {
-            benchmark(&mut emu, seconds.parse().expect("CM_BENCH_SECONDS must be a number"));
+            let seconds = seconds.parse().expect("CM_BENCH_SECONDS must be a number");
+            let _audio = if std::env::var_os("CM_BENCH_AUDIO").is_some() {
+                let stream = frontend::start_audio(&mut emu).expect("benchmark needs an audio output device");
+                emu.m.audio.midi = midi_out::MidiOut::open();
+                let sc55 = emu.m.display.music_sc55;
+                if sc55 { frontend::apply_music_output(&mut emu); }
+                assert_eq!(emu.m.audio.is_sc55(),sc55,"benchmark music output failed");
+                assert!(emu.m.audio.midi.is_some(),"benchmark music output device unavailable");
+                eprintln!("benchmark audio: {}, {:.0} Hz",if sc55 { "SC-55" } else { "Windows MIDI" },emu.m.audio.mixer.out_rate);
+                Some(stream)
+            } else { None };
+            if let Ok(repeats) = std::env::var("CM_BENCH_RENDERERS") {
+                let repeats: usize = repeats.parse().expect("CM_BENCH_RENDERERS must be a repeat count");
+                assert!((1..=20).contains(&repeats));
+                let saved = emu.m.display.vulkan;
+                for repeat in 0..repeats {
+                    for vulkan in if repeat % 2 == 0 { [false,true] } else { [true,false] } {
+                        emu.m.display.vulkan = vulkan;
+                        eprintln!("presentation comparison pass {}: {}",repeat+1,if vulkan { "vulkan" } else { "software" });
+                        benchmark(&mut emu,seconds);
+                    }
+                }
+                emu.m.display.vulkan = saved;
+            } else { benchmark(&mut emu,seconds); }
         } else { eprintln!("benchmark skipped: differential mode disables host presentation"); }
     }
     if let Some(p) = &emu.profile {
@@ -583,8 +619,15 @@ fn benchmark(emu: &mut Emu, seconds: f64) {
     let mut times = Vec::new();
     let mut buf = Vec::new();
     let mut window = std::env::var_os("CM_BENCH_WINDOW").map(|_| frontend::create_window(&emu.m.display,None).expect("benchmark window"));
+    if let Some(w) = &window { assert_eq!(w.is_vulkan(),emu.m.display.vulkan,"benchmark must not silently fall back from requested renderer"); }
+    // Window/device setup is a host pause, not guest/audio synthesis time.
+    emu.realtime_last = None;
+    emu.m.audio.prime_output();
+    let mut gpu_ms = Vec::new();
     let mut presents = 0;
     let mut compose = Duration::ZERO;
+    let mut guest = Duration::ZERO;
+    let mut sync = Duration::ZERO;
     let mut upload = Duration::ZERO;
     let mut work = Duration::ZERO;
     let mut start = Instant::now();
@@ -593,28 +636,37 @@ fn benchmark(emu: &mut Emu, seconds: f64) {
         if warming && start.elapsed().as_secs_f64() >= 2.0 {
             warming = false; start = Instant::now();
             first_frame = emu.m.display.frame_serial;
-            times.clear(); presents = 0; compose = Duration::ZERO; upload = Duration::ZERO; work = Duration::ZERO;
+            emu.m.audio.underruns.store(0,std::sync::atomic::Ordering::Relaxed);
+            if let Some(midi_out::MidiOut::Sc55Worker(w)) = &mut emu.m.audio.midi { w.dropped_frames = 0; }
+            times.clear(); gpu_ms.clear(); presents = 0; compose = Duration::ZERO; guest = Duration::ZERO; sync = Duration::ZERO; upload = Duration::ZERO; work = Duration::ZERO;
         }
         let frame_start = Instant::now();
         let serial = emu.m.display.frame_serial;
         emu.run_frame(frame_start + Duration::from_secs_f64(1.0 / 60.0)).expect("benchmark emulation");
+        guest += frame_start.elapsed();
         let before = Instant::now();
         display::render(&mut emu.m, &emu.cpu, &mut buf);
         compose += before.elapsed();
         if let Some(window) = &mut window {
             let before = Instant::now();
             let (w,h) = emu.m.display.size();
-            window.update_with_buffer(&buf,w,h).expect("benchmark upload");
-            upload += before.elapsed();
+            window.present(&buf,w,h,emu.m.display.vsync).expect("benchmark upload");
+            assert_eq!(window.is_vulkan(),emu.m.display.vulkan,"benchmark renderer failed");
+            upload += before.elapsed().saturating_sub(window.timing.wait);
+            sync += window.timing.wait;
+            if let Some(ms) = window.timing.gpu_ms { gpu_ms.push(ms); }
         }
         std::hint::black_box(&buf);
-        work += frame_start.elapsed();
+        work += frame_start.elapsed().saturating_sub(window.as_ref().map(|w| w.timing.wait).unwrap_or_default());
         if emu.m.display.frame_serial != serial {
             times.push(work.as_secs_f64() * 1000.0);
-            emu.m.display.tune_resolution(work.as_secs_f64());
+            emu.m.display.tune_resolution(work.as_secs_f64() + window.as_ref().map(|w| w.timing.gpu_work().as_secs_f64()).unwrap_or(0.0));
             work = Duration::ZERO;
         }
         presents += 1;
+        let before = Instant::now();
+        if let Some(window) = &window { if emu.m.display.vsync { assert!(window.sync(true),"benchmark V-Sync unavailable"); } }
+        sync += before.elapsed();
     }
     let elapsed = start.elapsed().as_secs_f64();
     let (w,h) = emu.m.display.size();
@@ -625,7 +677,22 @@ fn benchmark(emu: &mut Emu, seconds: f64) {
         compose.as_secs_f64() * 1000.0 / presents as f64,
         times[times.len()/2], times[(times.len()-1)*95/100], times[(times.len()-1)*99/100],
         emu.m.display.world_size.0, emu.m.display.world_size.1);
+    eprintln!("stages: guest {:.3}, compose {:.3}, upload {:.3}, presentation wait {:.3} ms/present; {:.1}% completed frames over 16.67 ms work budget",
+        guest.as_secs_f64()*1000.0/presents as f64,compose.as_secs_f64()*1000.0/presents as f64,
+        upload.as_secs_f64()*1000.0/presents as f64,sync.as_secs_f64()*1000.0/presents as f64,
+        times.iter().filter(|&&t| t > 1000.0/60.0).count() as f64*100.0/times.len() as f64);
+    if emu.m.audio.output {
+        assert_eq!(emu.m.audio.is_sc55(),emu.m.display.music_sc55,"benchmark music failed during measurement");
+        eprintln!("audio underrun callbacks: {}",emu.m.audio.underruns.load(std::sync::atomic::Ordering::Relaxed));
+        if let Some(midi_out::MidiOut::Sc55Worker(w)) = &emu.m.audio.midi { eprintln!("SC-55 stale PCM frames discarded: {}",w.dropped_frames); }
+    }
+    if !gpu_ms.is_empty() {
+        gpu_ms.sort_by(f64::total_cmp);
+        eprintln!("GPU transfer/blit: p50={:.3} p95={:.3} ms (hardware timestamps; excludes CPU world/composition and present waits)",gpu_ms[gpu_ms.len()/2],gpu_ms[(gpu_ms.len()-1)*95/100]);
+    }
     if window.is_some() { eprintln!("window upload: {:.3} ms/present (included in frame work above)",upload.as_secs_f64()*1000.0/presents as f64); }
+    drop(window); // Include resource destruction in validation, not just successful draws.
+    #[cfg(windows)] if std::env::var_os("CM_VK_VALIDATION").is_some() { assert_eq!(vulkan::validation_errors(),0,"Vulkan validation errors"); }
 }
 
 #[cfg(test)]

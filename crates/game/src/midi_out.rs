@@ -15,6 +15,7 @@ pub enum MidiOut {
     #[allow(dead_code)]
     Windows(isize),
     Sc55(crate::sc55::Sc55),
+    Sc55Worker(crate::sc55_worker::Worker),
 }
 
 impl MidiOut {
@@ -29,10 +30,11 @@ impl MidiOut {
         }
         None
     }
-    pub fn is_sc55(&self) -> bool { matches!(self, Self::Sc55(_)) }
+    pub fn is_sc55(&self) -> bool { matches!(self, Self::Sc55(_) | Self::Sc55Worker(_)) }
     pub fn send(&mut self, msg: &[u8]) {
         match self {
             Self::Sc55(s) => s.send(msg),
+            Self::Sc55Worker(w) => w.send(msg),
             Self::Windows(_handle) => {
                 #[cfg(windows)]
                 unsafe {
@@ -46,6 +48,7 @@ impl MidiOut {
     pub fn mix(&mut self, stereo: &mut [f32], rate: f64) -> bool {
         match self {
             Self::Sc55(s) => s.mix(stereo, rate),
+            Self::Sc55Worker(w) => w.advance(stereo.len()/2),
             Self::Windows(_) => true,
         }
     }

@@ -30,6 +30,7 @@ resolved dependency for the Windows target into `licenses/` and writes an
 inventory in `DEPENDENCIES.txt`. Direct external dependencies:
 
 - minifb 0.29.0: MIT OR Apache-2.0.
+- ash 0.38 (Windows Vulkan presentation): MIT OR Apache-2.0.
 - cpal 0.18.2: Apache-2.0.
 - libc (Unix builds only): MIT OR Apache-2.0.
 - Nuked-SC55 0.8.0 backend: GPL-2.0-or-later, by nukeykt, J. C. Moyer and
@@ -43,7 +44,9 @@ The MIT grant for original project code remains intact. The release includes
 and build scripts. Keep this source and license material with redistributed builds.
 
 The Windows package uses system Windows APIs, XInput and, by default, the system
-General MIDI device. The optional embedded SC-55 uses user-supplied Roland
+General MIDI device. Optional Vulkan presentation loads the user's system Vulkan
+loader/driver; it does not bundle a Vulkan SDK or register validation layers at
+runtime. The optional embedded SC-55 uses user-supplied Roland
 firmware/wave ROM dumps. These remain Roland's copyrighted material; no ROMs
 are included or downloaded. It does not bundle Windows system DLLs or a MIDI sound bank.
 The static C runtime option avoids requiring a separate VC++ Redistributable.

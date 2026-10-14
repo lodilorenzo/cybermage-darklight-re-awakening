@@ -5,7 +5,7 @@ use minifb::{Key, ScaleMode, Window, WindowOptions};
 use std::time::{Duration, Instant};
 use x86::Fault;
 
-pub(crate) fn create_window(d: &display::Display, position: Option<(isize,isize)>) -> Result<Window,minifb::Error> {
+pub(crate) fn create_window(d: &display::Display, position: Option<(isize,isize)>) -> Result<crate::presentation::HostWindow,minifb::Error> {
     let (w,h) = d.size();
     let mut window = Window::new(crate::rebrand::NAME,w,h,
         WindowOptions { resize: !d.fullscreen, title: !d.fullscreen, borderless: d.fullscreen,
@@ -32,7 +32,7 @@ pub(crate) fn create_window(d: &display::Display, position: Option<(isize,isize)
         #[cfg(not(windows))]
         return Err(minifb::Error::WindowCreate("fullscreen is currently supported on Windows".into()));
     }
-    Ok(window)
+    Ok(crate::presentation::HostWindow::new(window,d))
 }
 
 // Load the executable's embedded icon, not a file beside the installation.
@@ -91,6 +91,7 @@ pub fn run(cfg: &Config) {
     if emu.m.audio.midi.is_none() { eprintln!("warning: no MIDI output device; music disabled"); }
     let mut music_choice = emu.m.display.music_sc55;
     let mut window = create_window(&emu.m.display,None).expect("window");
+    emu.m.audio.prime_output();
     let mut buf = Vec::new();
     let mut keys = gamepad::Keys::default();
     let mut actions = gamepad::Actions::default();
@@ -99,7 +100,7 @@ pub fn run(cfg: &Config) {
     let mut last_nav = (0,0);
     let mut next_nav = Instant::now();
     let mut pointer_last = Instant::now();
-    let mut window_mode = (emu.m.display.mode,emu.m.display.fullscreen);
+    let mut window_mode = (emu.m.display.mode,emu.m.display.fullscreen,emu.m.display.vulkan);
     let mut page_buf = Vec::new();
     let mut deferred_action = None;
     let mut exit_stage = 0;
@@ -268,7 +269,7 @@ pub fn run(cfg: &Config) {
                         if let Some(code) = emu.m.exit_code { eprintln!("program exited with code {code}"); break; }
                         if let Some((prog,args)) = emu.m.spawn_request.take() {
                             emu.m.desktop.release_cursor(&mut window);
-                            crate::tgv::play_spawned(&mut window,&emu,&prog,&args);
+                            crate::tgv::play_spawned(&mut window,&mut emu,&prog,&args);
                             pointer_last = Instant::now();
                             let held = gamepad::poll(emu.m.display.deadzone);
                             clear_input(&mut emu,&mut keys,held);
@@ -297,28 +298,29 @@ pub fn run(cfg: &Config) {
             if emu.m.desktop.controller_guide {emu.m.display.art.cursor(&mut page_buf,emu.m.display.ui_pointer.0,emu.m.display.ui_pointer.1);}
             display::present_menu(&emu.m.display,&page_buf,&mut buf)
         } else { display::render(&mut emu.m,&emu.cpu,&mut buf) };
-        if let Err(e) = window.update_with_buffer(&buf,size.0,size.1) { eprintln!("presentation failed: {e}"); break; }
-        presentation = present_start.elapsed();
+        if let Err(e) = window.present(&buf,size.0,size.1,emu.m.display.vsync && window.is_active()) { eprintln!("presentation failed: {e}"); break; }
+        if window.failure { emu.m.display.renderer_message = "VULKAN FAILED - USING SOFTWARE".into(); }
+        presentation = present_start.elapsed().saturating_sub(window.timing.wait) + window.timing.gpu_work();
         if ran && playing {
-            world_work += start.elapsed();
+            world_work += start.elapsed().saturating_sub(window.timing.wait) + window.timing.gpu_work();
             if emu.m.display.frame_serial != serial {
                 emu.m.display.tune_resolution(world_work.as_secs_f64());
                 world_work = Duration::ZERO;
             }
         } else { world_work = Duration::ZERO; }
-        if !emu.m.display.options_open && window_mode != (emu.m.display.mode,emu.m.display.fullscreen) {
+        if !emu.m.display.options_open && window_mode != (emu.m.display.mode,emu.m.display.fullscreen,emu.m.display.vulkan) {
             emu.m.desktop.release_cursor(&mut window);
             match create_window(&emu.m.display,Some(window.get_position())) {
-                Ok(new_window) => { window = new_window; clear_input(&mut emu,&mut keys,pad); }
-                Err(e) => { eprintln!("cannot change window mode: {e}"); emu.m.display.fullscreen = window_mode.1; }
+                Ok(new_window) => { window = new_window; emu.m.display.renderer_message.clear(); clear_input(&mut emu,&mut keys,pad); emu.realtime_last = None; emu.m.audio.prime_output(); }
+                Err(e) => { eprintln!("cannot change window mode: {e}"); emu.m.display.fullscreen = window_mode.1; emu.m.display.vulkan = window_mode.2; }
             }
-            window_mode = (emu.m.display.mode,emu.m.display.fullscreen);
+            window_mode = (emu.m.display.mode,emu.m.display.fullscreen,emu.m.display.vulkan);
             pointer_last = Instant::now();
         }
         previous = pad; previous_physical = physical_pad;
         let vsync = emu.m.display.vsync && window.is_active();
         // Keep the compositor wait out of upload timing and dynamic-resolution work.
-        let synced = sync_display(vsync);
+        let synced = window.sync(vsync);
         if vsync && !synced && !vsync_failed { eprintln!("V-Sync unavailable; falling back to 60 FPS"); }
         vsync_failed = vsync && !synced;
         if !synced { wait_until(next_frame); }
@@ -431,7 +433,7 @@ fn select_page(emu: &mut Emu, tab: usize, actions: &mut gamepad::Actions, keys: 
     clear_input(emu,keys,pad);
 }
 
-fn apply_music_output(emu: &mut Emu) {
+pub(crate) fn apply_music_output(emu: &mut Emu) {
     if emu.m.display.music_sc55 == emu.m.audio.is_sc55() { return; }
     let roms = emu.m.vfs.overlay.join("sc55");
     if let Err(e) = emu.m.audio.set_music_output(emu.m.display.music_sc55, &roms) {
@@ -638,7 +640,7 @@ mod tests {
     }
 }
 
-fn start_audio(emu: &mut Emu) -> Option<cpal::Stream> {
+pub(crate) fn start_audio(emu: &mut Emu) -> Option<cpal::Stream> {
     use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
     let host = cpal::default_host();
     let dev = host.default_output_device()?;
@@ -647,9 +649,11 @@ fn start_audio(emu: &mut Emu) -> Option<cpal::Stream> {
     let channels = cfg.channels() as usize;
     emu.m.audio.mixer.out_rate = rate as f64;
     let ring = emu.m.audio.ring.clone();
+    let underruns = emu.m.audio.underruns.clone();
     let stream = dev.build_output_stream(cfg.config(),move |data: &mut [f32],_| {
         let frames = data.len()/channels;
         let mut r = ring.lock().unwrap();
+        if r.len()<frames*2 { underruns.fetch_add(1,std::sync::atomic::Ordering::Relaxed); }
         for f in 0..frames {
             let l = r.pop_front().unwrap_or(0.0);
             let rr = r.pop_front().unwrap_or(l);
